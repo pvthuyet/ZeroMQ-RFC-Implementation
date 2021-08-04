@@ -10,7 +10,7 @@ class ppworker
 {
 private:
 	zmqpp::context_t& ctx_;
-	std::string port_;
+	std::string endpoint_;
 	std::string identity_;
 	std::unique_ptr<zmqpp::socket_t> sock_;
 	std::unique_ptr<std::jthread> thread_;

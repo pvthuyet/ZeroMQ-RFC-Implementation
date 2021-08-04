@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
 		// ..
 		zmqpp::context_t ctx;
 		ppbroker broker(ctx);
-		broker.start(argv[1], argv[2]);
+		broker.start("tcp://*:5555", "tcp://*:5556");
 
 		// stop
 		//std::thread t([&ctx]() {

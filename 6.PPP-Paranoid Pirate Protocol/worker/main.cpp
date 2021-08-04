@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
 		// Load config file
 		// ..
 		zmqpp::context_t ctx;
-		ppworker worker(ctx, "5556", "12345");
+		ppworker worker(ctx, "tcp://localhost:5556", "12345");
 		worker.start();
 
 		// stop

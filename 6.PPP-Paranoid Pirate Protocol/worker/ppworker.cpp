@@ -3,9 +3,9 @@
 #include "constant.hpp"
 
 SAIGON_NAMESPACE_BEGIN
-ppworker::ppworker(zmqpp::context_t& ctx, std::string_view port, std::string_view identity) :
+ppworker::ppworker(zmqpp::context_t& ctx, std::string_view endpoint, std::string_view identity) :
 	ctx_{ctx},
-	port_{port},
+	endpoint_{ endpoint},
 	identity_{identity}
 {}
 
@@ -22,7 +22,7 @@ void ppworker::start()
 		return;
 	}
 
-	SPDLOG_INFO("Starting worker at port {}", port_);
+	SPDLOG_INFO("Starting worker at {}", endpoint_);
 	thread_ = std::make_unique<std::jthread>([this](std::stop_token tok) {
 		this->run();
 		});
@@ -122,7 +122,7 @@ std::unique_ptr<zmqpp::socket_t> ppworker::init_socket()
 	auto sock = std::make_unique<zmqpp::socket_t>(ctx_, zmqpp::socket_type::dealer);
 	// set random identity to make tracing easier
 	sock->set(zmqpp::socket_option::identity, identity_);
-	sock->connect(std::format("tcp://localhost:{}", port_));
+	sock->connect(endpoint_);
 	// configure socket to not wait at close time
 	sock->set(zmqpp::socket_option::linger, 0);
 
