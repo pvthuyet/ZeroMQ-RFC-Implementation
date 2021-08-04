@@ -5,9 +5,6 @@
 #include <vector>
 #include "define.hpp"
 
-#define HEARTBEAT_LIVENESS  3       //  3-5 is reasonable
-#define HEARTBEAT_INTERVAL  1000    //  msecs
-
 SAIGON_NAMESPACE_BEGIN
 class worker_queue
 {

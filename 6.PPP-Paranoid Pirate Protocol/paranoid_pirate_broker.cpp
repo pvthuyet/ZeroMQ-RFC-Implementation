@@ -1,39 +1,40 @@
-#include "paranoid_pirate_proxy.hpp"
+#include "paranoid_pirate_broker.hpp"
 #include "logger/logger_define.hpp"
+#include "constant.hpp"
 
 SAIGON_NAMESPACE_BEGIN
-paranoid_pirate_proxy::paranoid_pirate_proxy(zmqpp::context_t& ctx):
+paranoid_pirate_broker::paranoid_pirate_broker(zmqpp::context_t& ctx):
 	ctx_{ctx}
 {}
 
-paranoid_pirate_proxy::~paranoid_pirate_proxy() noexcept
+paranoid_pirate_broker::~paranoid_pirate_broker() noexcept
 {
 	wait();
 }
 
-void paranoid_pirate_proxy::start(std::string_view feport, std::string_view beport)
+void paranoid_pirate_broker::start(std::string_view feport, std::string_view beport)
 {
 	LOGENTER;
 	if (worker_) {
-		SPDLOG_ERROR("Proxy is already started");
+		SPDLOG_ERROR("Broker is already started");
 		return;
 	}
 
-	SPDLOG_INFO("Starting proxy frontend port {}, backend port {}", feport, beport);
+	SPDLOG_INFO("Starting broker frontend port {}, backend port {}", feport, beport);
 	worker_ = std::make_unique<std::jthread>([this, feport, beport](std::stop_token tok) {
 		this->run(feport, beport);
 		});
 	LOGEXIT;
 }
 
-void paranoid_pirate_proxy::wait() noexcept
+void paranoid_pirate_broker::wait() noexcept
 {
 	if (worker_ && worker_->joinable()) {
 		worker_->join();
 	}
 }
 
-void paranoid_pirate_proxy::run(std::string_view feport, std::string_view beport)
+void paranoid_pirate_broker::run(std::string_view feport, std::string_view beport)
 {
 	LOGENTER;
 	using namespace std::string_literals;
@@ -53,8 +54,8 @@ void paranoid_pirate_proxy::run(std::string_view feport, std::string_view beport
 			{backend, 0, ZMQ_POLLIN, 0},
 			{frontend, 0, ZMQ_POLLIN, 0}
 		};
-		while (1) {
-			int rc{};
+		int rc{};
+		while (true) {
 			if (queue.size()) {
 				rc = zmq_poll(items, 2, HEARTBEAT_INTERVAL);
 			}

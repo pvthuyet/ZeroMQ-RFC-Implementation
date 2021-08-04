@@ -1,6 +1,7 @@
 #include "worker_queue.hpp"
 #include <gsl/gsl_assert>
 #include <algorithm>
+#include "constant.hpp"
 
 SAIGON_NAMESPACE_BEGIN
 

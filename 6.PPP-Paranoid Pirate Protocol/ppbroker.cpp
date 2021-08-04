@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vld.h>
 #include "worker_queue.hpp"
-#include "paranoid_pirate_proxy.hpp"
+#include "paranoid_pirate_broker.hpp"
 #include "logger/logger.hpp"
 #include "logger/logger_define.hpp"
 
@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
 		// Load config file
 		// ..
 		zmqpp::context_t ctx;
-		paranoid_pirate_proxy proxy(ctx);
+		paranoid_pirate_broker proxy(ctx);
 		proxy.start(argv[1], argv[2]);
 
 		// stop
