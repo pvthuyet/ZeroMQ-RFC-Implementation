@@ -20,6 +20,8 @@ add_executable(ppworker
 	"${CMAKE_SOURCE_DIR}/logger/logger.cpp"
 	"constant.hpp"
 	"worker/main.cpp"
+	"worker/ppworker.hpp"
+	"worker/ppworker.cpp"
 )
 target_include_directories(ppworker PRIVATE ${SGLIB_INCLUDEDIR} ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(ppworker PRIVATE ${WINDOWS_LIBRARIES} ${SGLIB_LIBRARIES})
