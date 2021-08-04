@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vld.h>
 #include "worker_queue.hpp"
-#include "paranoid_pirate_broker.hpp"
+#include "ppbroker.hpp"
 #include "logger/logger.hpp"
 #include "logger/logger_define.hpp"
 
@@ -10,7 +10,7 @@ int main(int argc, char* argv[])
 	using namespace sg;
 	logger::get_instance();
 	try {
-		if (argc < 3) {
+		if (argc < 2) {
 			SPDLOG_INFO("Usage: ppproxy config.json");
 			return EXIT_FAILURE;
 		}
@@ -18,8 +18,8 @@ int main(int argc, char* argv[])
 		// Load config file
 		// ..
 		zmqpp::context_t ctx;
-		paranoid_pirate_broker proxy(ctx);
-		proxy.start(argv[1], argv[2]);
+		ppbroker broker(ctx);
+		broker.start(argv[1], argv[2]);
 
 		// stop
 		//std::thread t([&ctx]() {

@@ -6,7 +6,7 @@
 #include "define.hpp"
 
 SAIGON_NAMESPACE_BEGIN
-class paranoid_pirate_broker
+class ppbroker
 {
 private:
 	zmqpp::context_t& ctx_;
@@ -14,8 +14,8 @@ private:
 	std::unique_ptr<std::jthread> worker_;
 
 public:
-	paranoid_pirate_broker(zmqpp::context_t& ctx);
-	~paranoid_pirate_broker() noexcept;
+	ppbroker(zmqpp::context_t& ctx);
+	~ppbroker() noexcept;
 
 	void start(std::string_view feport, std::string_view beport);
 	void wait() noexcept;

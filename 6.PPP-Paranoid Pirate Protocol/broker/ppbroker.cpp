@@ -1,18 +1,18 @@
-#include "paranoid_pirate_broker.hpp"
+#include "ppbroker.hpp"
 #include "logger/logger_define.hpp"
 #include "constant.hpp"
 
 SAIGON_NAMESPACE_BEGIN
-paranoid_pirate_broker::paranoid_pirate_broker(zmqpp::context_t& ctx):
+ppbroker::ppbroker(zmqpp::context_t& ctx):
 	ctx_{ctx}
 {}
 
-paranoid_pirate_broker::~paranoid_pirate_broker() noexcept
+ppbroker::~ppbroker() noexcept
 {
 	wait();
 }
 
-void paranoid_pirate_broker::start(std::string_view feport, std::string_view beport)
+void ppbroker::start(std::string_view feport, std::string_view beport)
 {
 	LOGENTER;
 	if (worker_) {
@@ -27,14 +27,14 @@ void paranoid_pirate_broker::start(std::string_view feport, std::string_view bep
 	LOGEXIT;
 }
 
-void paranoid_pirate_broker::wait() noexcept
+void ppbroker::wait() noexcept
 {
 	if (worker_ && worker_->joinable()) {
 		worker_->join();
 	}
 }
 
-void paranoid_pirate_broker::run(std::string_view feport, std::string_view beport)
+void ppbroker::run(std::string_view feport, std::string_view beport)
 {
 	LOGENTER;
 	using namespace std::string_literals;
