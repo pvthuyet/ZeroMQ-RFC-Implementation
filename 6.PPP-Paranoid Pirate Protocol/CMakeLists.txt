@@ -1,5 +1,6 @@
 # using static library of zero mq
 add_compile_definitions(ZMQ_STATIC ZMQPP_STATIC_DEFINE) ## or #define ZMQ_STATIC beofre include zmq.hpp
+add_compile_definitions(DEBUG_ON) # for write debug spdlog
 
 ## broker
 add_executable(ppbroker 

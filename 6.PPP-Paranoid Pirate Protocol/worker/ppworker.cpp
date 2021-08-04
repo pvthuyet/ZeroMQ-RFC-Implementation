@@ -58,7 +58,10 @@ void ppworker::run()
 				{static_cast<void*>(*sock_.get()), 0, ZMQ_POLLIN, 0}
 			};
 
-			zmq_poll(items, 1, HEARTBEAT_INTERVAL);
+			auto rc = zmq_poll(items, 1, HEARTBEAT_INTERVAL);
+			if (rc < 0) {
+				throw zmqpp::zmq_internal_exception{};
+			}
 
 			if (items[0].revents == zmqpp::poller_t::poll_in) {
 				interval = INTERVAL_INIT;
@@ -82,6 +85,7 @@ void ppworker::run()
 					auto body = msg.get<std::string>(0);
 					if (body == "HEARTBEAT"s) {
 						liveness = HEARTBEAT_LIVENESS;
+						SPDLOG_DEBUG("Recevied HEARTBEAT");
 					}
 					else {
 						SPDLOG_ERROR("{} {}: invalid message", identity_, body);

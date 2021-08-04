@@ -1,7 +1,7 @@
 #ifndef LOGGER_DEFINE_H_
 #define LOGGER_DEFINE_H_
 
-#ifdef IS_DEBUG
+#ifdef DEBUG_ON
 #define SPDLOG_ACTIVE_LEVEL				SPDLOG_LEVEL_DEBUG
 #define SPDLOG_DEBUG_ON					1
 #endif // IS_DEBUG

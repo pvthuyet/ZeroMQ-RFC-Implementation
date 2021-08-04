@@ -83,6 +83,7 @@ void ppbroker::run(std::string_view feport, std::string_view beport)
 					else {
 						if ("HEARTBEAT"s == ctrl) {
 							queue.refresh(identity);
+							SPDLOG_DEBUG("Recevied HEARTBEAT");
 						}
 						else {
 							SPDLOG_ERROR("Invalid message from {} - {}", identity, ctrl);
