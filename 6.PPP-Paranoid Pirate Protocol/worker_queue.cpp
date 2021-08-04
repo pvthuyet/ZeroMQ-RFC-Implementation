@@ -2,7 +2,17 @@
 #include <gsl/gsl_assert>
 #include <algorithm>
 
-namespace saigon {
+SAIGON_NAMESPACE_BEGIN
+
+size_t worker_queue::size() const
+{
+	return queue_.size();
+}
+
+const std::vector<worker_queue::worker_t>& worker_queue::data() const
+{
+	return queue_;
+}
 
 void worker_queue::push(std::string_view identity)
 {
@@ -10,9 +20,9 @@ void worker_queue::push(std::string_view identity)
 		return item.identity_ == identity;
 		});
 	if (it == std::cend(queue_)) {
-		 queue_.push_back(worker_t { 
-			 .identity_ = std::string{identity}, 
-			 .expiry_ = std::chrono::steady_clock::now()
+		queue_.push_back(worker_t{
+			.identity_ = std::string{identity},
+			.when_ = std::chrono::steady_clock::now() + std::chrono::milliseconds(HEARTBEAT_LIVENESS * HEARTBEAT_INTERVAL)
 			 });
 	}
 }
@@ -30,7 +40,7 @@ void worker_queue::refresh(std::string_view identity)
 		return item.identity_ == identity;
 		});
 	if (it != std::cend(queue_)) {
-		it->expiry_ = std::chrono::steady_clock::now();
+		it->when_ = std::chrono::steady_clock::now() + std::chrono::milliseconds(HEARTBEAT_LIVENESS * HEARTBEAT_INTERVAL);
 	}
 }
 
@@ -48,9 +58,8 @@ void worker_queue::purge()
 	constexpr long long exp = HEARTBEAT_LIVENESS * HEARTBEAT_INTERVAL;
 	auto now = std::chrono::steady_clock::now();
 	std::erase_if(queue_, [&now, exp](auto const& item) {
-		auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(now - item.expiry_);
-		return diff.count() > exp;
+		return item.when_ < now;
 		});
 }
 
-}
+SAIGON_NAMESPACE_END
