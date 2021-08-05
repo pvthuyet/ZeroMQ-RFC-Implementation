@@ -50,19 +50,13 @@ void ppbroker::run(std::string fe, std::string be)
 		auto heartbeat_at = steady_lock::now() + std::chrono::milliseconds(HEARTBEAT_INTERVAL);
 		worker_queue queue;
 
-		zmq_pollitem_t items[] = {
-			{backend, 0, ZMQ_POLLIN, 0},
-			{frontend, 0, ZMQ_POLLIN, 0}
-		};
-		int rc{};
 		while (true) {
-			if (queue.size()) {
-				rc = zmq_poll(items, 2, HEARTBEAT_INTERVAL);
-			}
-			else {
-				rc = zmq_poll(items, 1, HEARTBEAT_INTERVAL);
-			}
+			zmq_pollitem_t items[] = {
+				{backend, 0, ZMQ_POLLIN, 0},
+				{frontend, 0, ZMQ_POLLIN, 0}
+			};
 
+			auto rc = zmq_poll(items, queue.size() ? 2 : 1, HEARTBEAT_INTERVAL);
 			if (rc < 0) {
 				throw zmqpp::zmq_internal_exception{};
 			}
@@ -83,7 +77,7 @@ void ppbroker::run(std::string fe, std::string be)
 					else {
 						if ("HEARTBEAT"s == ctrl) {
 							queue.refresh(identity);
-							SPDLOG_DEBUG("Recevied HEARTBEAT");
+							//SPDLOG_DEBUG("Recevied HEARTBEAT");
 						}
 						else {
 							SPDLOG_ERROR("Invalid message from {} - {}", identity, ctrl);
@@ -102,9 +96,14 @@ void ppbroker::run(std::string fe, std::string be)
 			if (ZMQ_POLLIN & items[1].revents) {
 				zmqpp::message_t msg;
 				frontend.receive(msg);
-				auto wrkident = queue.pop();
-				msg.push_front(wrkident);
-				backend.send(msg);
+				if (queue.size()) {
+					auto wrkident = queue.pop();
+					msg.push_front(wrkident);
+					backend.send(msg);
+				}
+				else {
+					SPDLOG_ERROR("Received request from client but no worker available");
+				}
 			}
 
 			// send out heartbeats at regular intervals

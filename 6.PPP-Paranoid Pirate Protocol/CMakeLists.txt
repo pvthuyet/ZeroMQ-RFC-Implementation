@@ -27,7 +27,16 @@ add_executable(ppworker
 target_include_directories(ppworker PRIVATE ${SGLIB_INCLUDEDIR} ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(ppworker PRIVATE ${WINDOWS_LIBRARIES} ${SGLIB_LIBRARIES})
 
-message(STATUS "CMAKE_SOURCE_DIR: ${CMAKE_SOURCE_DIR}")
-message(STATUS "CMAKE_CURRENT_SOURCE_DIR: ${CMAKE_CURRENT_SOURCE_DIR}")
+## Client
+add_executable(lpclient
+	"${CMAKE_SOURCE_DIR}/logger/logger.hpp"
+	"${CMAKE_SOURCE_DIR}/logger/logger.cpp"
+	"constant.hpp"
+	"client/main.cpp"
+	"client/lpclient.hpp"
+	"client/lpclient.cpp"
+)
+target_include_directories(lpclient PRIVATE ${SGLIB_INCLUDEDIR} ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(lpclient PRIVATE ${WINDOWS_LIBRARIES} ${SGLIB_LIBRARIES})
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/config.json" "${CMAKE_CURRENT_BINARY_DIR}/config.json" COPYONLY)

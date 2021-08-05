@@ -85,7 +85,7 @@ void ppworker::run()
 					auto body = msg.get<std::string>(0);
 					if (body == "HEARTBEAT"s) {
 						liveness = HEARTBEAT_LIVENESS;
-						SPDLOG_DEBUG("Recevied HEARTBEAT");
+						//SPDLOG_DEBUG("Recevied HEARTBEAT");
 					}
 					else {
 						SPDLOG_ERROR("{} {}: invalid message", identity_, body);
