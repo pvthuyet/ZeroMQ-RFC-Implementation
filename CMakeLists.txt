@@ -87,4 +87,5 @@ message(STATUS "SGLIB_INCLUDEDIR: ${SGLIB_INCLUDEDIR}")
 message(STATUS "SGLIB_LIBRARIES: ${SGLIB_LIBRARIES}")
 
 ### example
+add_subdirectory("admin")
 add_subdirectory("6.PPP-Paranoid Pirate Protocol")

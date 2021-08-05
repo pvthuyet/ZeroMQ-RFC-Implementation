@@ -10,17 +10,22 @@ class ppbroker
 {
 private:
 	zmqpp::context_t& ctx_;
+	std::string frontend_host_;
+	std::string backend_host_;
+	std::string adminep_;
 	worker_queue queue_;
 	std::unique_ptr<std::jthread> worker_;
 
 public:
-	ppbroker(zmqpp::context_t& ctx);
-	~ppbroker() noexcept;
+	ppbroker(zmqpp::context_t& ctx, 
+		std::string_view frontend_host,
+		std::string_view backend_host,
+		std::string_view adminep);
 
-	void start(std::string const& fe, std::string const& be);
+	void start();
 	void wait() noexcept;
 
 private:
-	void run(std::string fe, std::string be);
+	void run(std::stop_token tok);
 };
 SAIGON_NAMESPACE_END

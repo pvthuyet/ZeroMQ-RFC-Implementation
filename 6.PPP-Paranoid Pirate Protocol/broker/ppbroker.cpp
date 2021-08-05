@@ -1,18 +1,20 @@
 #include "ppbroker.hpp"
 #include "logger/logger_define.hpp"
 #include "constant.hpp"
+#include "admin/sub_admin.hpp"
 
 SAIGON_NAMESPACE_BEGIN
-ppbroker::ppbroker(zmqpp::context_t& ctx):
-	ctx_{ctx}
+ppbroker::ppbroker(zmqpp::context_t& ctx, 
+	std::string_view frontend_host,
+	std::string_view backend_host,
+	std::string_view adminep):
+	ctx_{ctx},
+	frontend_host_{ frontend_host },
+	backend_host_{ backend_host },
+	adminep_{adminep}
 {}
 
-ppbroker::~ppbroker() noexcept
-{
-	wait();
-}
-
-void ppbroker::start(std::string const& fe, std::string const& be)
+void ppbroker::start()
 {
 	LOGENTER;
 	if (worker_) {
@@ -20,21 +22,21 @@ void ppbroker::start(std::string const& fe, std::string const& be)
 		return;
 	}
 
-	SPDLOG_INFO("Starting broker frontend port {}, backend port {}", fe, be);
-	worker_ = std::make_unique<std::jthread>([this, fe, be](std::stop_token tok) {
-		this->run(std::move(fe), std::move(be));
+	SPDLOG_INFO("Starting broker frontend {}, backend  {}", frontend_host_, backend_host_);
+	worker_ = std::make_unique<std::jthread>([this](std::stop_token tok) {
+		this->run(tok);
 		});
 	LOGEXIT;
 }
 
 void ppbroker::wait() noexcept
 {
-	if (worker_ && worker_->joinable()) {
-		worker_->join();
-	}
+	// Subscribe the admin
+	sg::sub_admin admin(ctx_, adminep_);
+	admin.wait();
 }
 
-void ppbroker::run(std::string fe, std::string be)
+void ppbroker::run(std::stop_token tok)
 {
 	LOGENTER;
 	using namespace std::string_literals;
@@ -43,15 +45,15 @@ void ppbroker::run(std::string fe, std::string be)
 	try {
 		zmqpp::socket_t frontend(ctx_, zmqpp::socket_type::router);
 		zmqpp::socket_t backend(ctx_, zmqpp::socket_type::router);
-		frontend.bind(fe);	// for clients
-		backend.bind(be);	// for workers
+		frontend.bind(frontend_host_);	// for clients
+		backend.bind(backend_host_);	// for workers
 
 		// queue of available workers
 		auto heartbeat_at = steady_lock::now() + std::chrono::milliseconds(HEARTBEAT_INTERVAL);
 		worker_queue queue;
 		queue.reserve(10);
 
-		while (true) {
+		while (!tok.stop_requested()) {
 			zmq_pollitem_t items[] = {
 				{backend, 0, ZMQ_POLLIN, 0},
 				{frontend, 0, ZMQ_POLLIN, 0}

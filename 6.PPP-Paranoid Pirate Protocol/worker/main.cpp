@@ -1,4 +1,4 @@
-//#include <vld.h>
+#include <vld.h>
 #include "ppworker.hpp"
 #include "logger/logger.hpp"
 #include "logger/logger_define.hpp"
@@ -19,8 +19,12 @@ int main(int argc, char* argv[])
 		reader.read(argv[2]);
 
 		zmqpp::context_t ctx;
-		ppworker worker(ctx, reader.get<std::string>("backend_endpoint"), argv[1]);
+		ppworker worker(ctx, 
+			reader.get<std::string>("backend_endpoint"), 
+			reader.get<std::string>("admin_subscriber"),
+			argv[1]);
 		worker.start();
+		worker.wait();
 	}
 	catch (std::exception const& ex) {
 		SPDLOG_ERROR(ex.what());

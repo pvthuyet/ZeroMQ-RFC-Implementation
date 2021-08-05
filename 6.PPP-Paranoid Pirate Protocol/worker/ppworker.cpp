@@ -1,18 +1,18 @@
 #include "ppworker.hpp"
 #include "logger/logger_define.hpp"
 #include "constant.hpp"
+#include "admin/sub_admin.hpp"
 
 SAIGON_NAMESPACE_BEGIN
-ppworker::ppworker(zmqpp::context_t& ctx, std::string_view endpoint, std::string_view identity) :
+ppworker::ppworker(zmqpp::context_t& ctx, 
+	std::string_view endpoint, 
+	std::string_view adminep, 
+	std::string_view identity) :
 	ctx_{ctx},
 	endpoint_{ endpoint},
+	adminep_{ adminep },
 	identity_{identity}
 {}
-
-ppworker::~ppworker() noexcept
-{
-	wait();
-}
 
 void ppworker::start()
 {
@@ -24,19 +24,19 @@ void ppworker::start()
 
 	SPDLOG_INFO("Starting worker at {}", endpoint_);
 	thread_ = std::make_unique<std::jthread>([this](std::stop_token tok) {
-		this->run();
+		this->run(tok);
 		});
 	LOGEXIT;
 }
 
-void ppworker::wait() noexcept
+void ppworker::wait()
 {
-	if (thread_ && thread_->joinable()) {
-		thread_->join();
-	}
+	// Subscribe the admin
+	sg::sub_admin admin(ctx_, adminep_);
+	admin.wait();
 }
 
-void ppworker::run()
+void ppworker::run(std::stop_token tok)
 {
 	LOGENTER;
 	using namespace std::string_literals;
@@ -53,7 +53,7 @@ void ppworker::run()
 		// send out heartbeats at regular intervals
 		auto heartbeat_at = steady_clock::now() + milli(HEARTBEAT_INTERVAL);
 
-		while (true) {
+		while (!tok.stop_requested()) {
 			zmq_pollitem_t items[] = {
 				{static_cast<void*>(*sock_.get()), 0, ZMQ_POLLIN, 0}
 			};
@@ -76,7 +76,7 @@ void ppworker::run()
 					auto body = msg.get<std::string>(0);
 					if (body == "HEARTBEAT"s) {
 						liveness = HEARTBEAT_LIVENESS;
-						SPDLOG_DEBUG("Recevied HEARTBEAT");
+						//SPDLOG_DEBUG("Recevied HEARTBEAT");
 					}
 					else {
 						SPDLOG_ERROR("{} {}: invalid message", identity_, body);

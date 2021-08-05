@@ -11,7 +11,9 @@ add_executable(ppbroker
 	"broker/worker_queue.hpp" 
 	"broker/worker_queue.cpp" 
 	"broker/ppbroker.hpp" 
-	"broker/ppbroker.cpp")
+	"broker/ppbroker.cpp"
+	"${CMAKE_SOURCE_DIR}/admin/sub_admin.cpp"
+	)
 target_include_directories(ppbroker PRIVATE ${SGLIB_INCLUDEDIR} ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(ppbroker PRIVATE ${WINDOWS_LIBRARIES} ${SGLIB_LIBRARIES})
 
@@ -23,6 +25,7 @@ add_executable(ppworker
 	"worker/main.cpp"
 	"worker/ppworker.hpp"
 	"worker/ppworker.cpp"
+	"${CMAKE_SOURCE_DIR}/admin/sub_admin.cpp"
 )
 target_include_directories(ppworker PRIVATE ${SGLIB_INCLUDEDIR} ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(ppworker PRIVATE ${WINDOWS_LIBRARIES} ${SGLIB_LIBRARIES})
@@ -41,3 +44,4 @@ target_link_libraries(lpclient PRIVATE ${WINDOWS_LIBRARIES} ${SGLIB_LIBRARIES})
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/config.json" "${CMAKE_CURRENT_BINARY_DIR}/config.json" COPYONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/run.bat" "${CMAKE_CURRENT_BINARY_DIR}/run.bat" COPYONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/config.json" "${CMAKE_BINARY_DIR}/admin/ppp/config.json" COPYONLY)

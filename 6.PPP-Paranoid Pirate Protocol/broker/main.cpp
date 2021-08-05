@@ -1,5 +1,5 @@
 #include <iostream>
-//#include <vld.h>
+#include <vld.h>
 #include "worker_queue.hpp"
 #include "ppbroker.hpp"
 #include "logger/logger.hpp"
@@ -21,9 +21,12 @@ int main(int argc, char* argv[])
 		reader.read(argv[1]);
 
 		zmqpp::context_t ctx;
-		ppbroker broker(ctx);
-		broker.start(reader.get<std::string>("frontend_host"), 
-			reader.get<std::string>("backend_host"));
+		ppbroker broker(ctx, 
+			reader.get<std::string>("frontend_host"),
+			reader.get<std::string>("backend_host"),
+			reader.get<std::string>("admin_subscriber"));
+		broker.start();
+		broker.wait();
 	}
 	catch (std::exception const& ex) {
 		SPDLOG_ERROR(ex.what());
