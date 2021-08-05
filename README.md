@@ -5,7 +5,7 @@ Implement ZeroMQ RFC by modern C++
 * [Document detail](https://zguide.zeromq.org/docs/chapter4/#Robust-Reliable-Queuing-Paranoid-Pirate-Pattern)  
 ![](images/ppp.png)  
   
-## Thirt parties
+## Third parties
 * [zeromq library](https://github.com/zeromq/libzmq)
 * [C++ binding for zeromq](https://github.com/zeromq/zmqpp)
 * [Boost Library](https://www.boost.org/)
