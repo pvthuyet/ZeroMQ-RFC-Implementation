@@ -73,7 +73,7 @@ void lpclient::run()
 					auto msgid = msg.get<int>(0);
 					auto body = msg.get<std::string>(1);
 					if (msgid == seq) {
-						SPDLOG_DEBUG("{} {}", body, msgid);
+						SPDLOG_INFO("{} {}", body, msgid);
 						retries = REQUEST_RETRIES;
 						expect_reply = false;
 					}
