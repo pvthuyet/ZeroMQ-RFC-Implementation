@@ -49,6 +49,7 @@ void ppbroker::run(std::string fe, std::string be)
 		// queue of available workers
 		auto heartbeat_at = steady_lock::now() + std::chrono::milliseconds(HEARTBEAT_INTERVAL);
 		worker_queue queue;
+		queue.reserve(10);
 
 		while (true) {
 			zmq_pollitem_t items[] = {
@@ -77,7 +78,7 @@ void ppbroker::run(std::string fe, std::string be)
 					else {
 						if ("HEARTBEAT"s == ctrl) {
 							queue.refresh(identity);
-							//SPDLOG_DEBUG("Recevied HEARTBEAT");
+							SPDLOG_DEBUG("Recevied HEARTBEAT");
 						}
 						else {
 							SPDLOG_ERROR("Invalid message from {} - {}", identity, ctrl);
@@ -89,6 +90,7 @@ void ppbroker::run(std::string fe, std::string be)
 					// remove worker identity
 					msg.pop_front();
 					frontend.send(msg);
+					queue.push(identity);
 				}
 			}
 

@@ -17,6 +17,7 @@ private:
 	std::vector<worker_t> queue_;
 
 public:
+	void reserve(const size_t capacity);
 	size_t size() const;
 	const std::vector<worker_queue::worker_t>& data() const;
 	void push(std::string_view identity);

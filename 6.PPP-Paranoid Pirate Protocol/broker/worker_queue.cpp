@@ -5,6 +5,11 @@
 
 SAIGON_NAMESPACE_BEGIN
 
+void worker_queue::reserve(const size_t capacity)
+{
+	queue_.reserve(capacity);
+}
+
 size_t worker_queue::size() const
 {
 	return queue_.size();
