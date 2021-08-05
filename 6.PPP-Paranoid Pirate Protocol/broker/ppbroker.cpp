@@ -12,7 +12,7 @@ ppbroker::~ppbroker() noexcept
 	wait();
 }
 
-void ppbroker::start(std::string_view epfrontend, std::string_view epbackend)
+void ppbroker::start(std::string const& fe, std::string const& be)
 {
 	LOGENTER;
 	if (worker_) {
@@ -20,9 +20,9 @@ void ppbroker::start(std::string_view epfrontend, std::string_view epbackend)
 		return;
 	}
 
-	SPDLOG_INFO("Starting broker frontend port {}, backend port {}", epfrontend, epbackend);
-	worker_ = std::make_unique<std::jthread>([this, epfrontend, epbackend](std::stop_token tok) {
-		this->run(epfrontend, epbackend);
+	SPDLOG_INFO("Starting broker frontend port {}, backend port {}", fe, be);
+	worker_ = std::make_unique<std::jthread>([this, fe, be](std::stop_token tok) {
+		this->run(std::move(fe), std::move(be));
 		});
 	LOGEXIT;
 }
@@ -34,7 +34,7 @@ void ppbroker::wait() noexcept
 	}
 }
 
-void ppbroker::run(std::string_view epfrontend, std::string_view epbackend)
+void ppbroker::run(std::string fe, std::string be)
 {
 	LOGENTER;
 	using namespace std::string_literals;
@@ -43,8 +43,8 @@ void ppbroker::run(std::string_view epfrontend, std::string_view epbackend)
 	try {
 		zmqpp::socket_t frontend(ctx_, zmqpp::socket_type::router);
 		zmqpp::socket_t backend(ctx_, zmqpp::socket_type::router);
-		frontend.bind(epfrontend.data());	// for clients
-		backend.bind(epbackend.data());	// for workers
+		frontend.bind(fe);	// for clients
+		backend.bind(be);	// for workers
 
 		// queue of available workers
 		auto heartbeat_at = steady_lock::now() + std::chrono::milliseconds(HEARTBEAT_INTERVAL);

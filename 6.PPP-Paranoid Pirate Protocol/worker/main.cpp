@@ -2,29 +2,25 @@
 #include "ppworker.hpp"
 #include "logger/logger.hpp"
 #include "logger/logger_define.hpp"
+#include <sgutils/json_reader.hpp>
 
 int main(int argc, char* argv[])
 {
 	using namespace sg;
 	logger::get_instance();
 	try {
-		//if (argc < 2) {
-		//	SPDLOG_INFO("Usage: ppproxy config.json");
-		//	return EXIT_FAILURE;
-		//}
+		if (argc < 3) {
+			SPDLOG_INFO("Usage: ppworker 12345 config.json");
+			return EXIT_FAILURE;
+		}
 
 		// Load config file
-		// ..
-		zmqpp::context_t ctx;
-		ppworker worker(ctx, "tcp://localhost:5556", "12345");
-		worker.start();
+		sg::json_reader reader;
+		reader.read(argv[2]);
 
-		// stop
-		//std::thread t([&ctx]() {
-		//	std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-		//	ctx.terminate();
-		//	});
-		//t.join();
+		zmqpp::context_t ctx;
+		ppworker worker(ctx, reader.get<std::string>("backend_endpoint"), argv[1]);
+		worker.start();
 	}
 	catch (std::exception const& ex) {
 		SPDLOG_ERROR(ex.what());

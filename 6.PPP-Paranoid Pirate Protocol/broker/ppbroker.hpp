@@ -17,10 +17,10 @@ public:
 	ppbroker(zmqpp::context_t& ctx);
 	~ppbroker() noexcept;
 
-	void start(std::string_view feport, std::string_view beport);
+	void start(std::string const& fe, std::string const& be);
 	void wait() noexcept;
 
 private:
-	void run(std::string_view feport, std::string_view beport);
+	void run(std::string fe, std::string be);
 };
 SAIGON_NAMESPACE_END

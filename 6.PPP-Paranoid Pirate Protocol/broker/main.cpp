@@ -4,6 +4,7 @@
 #include "ppbroker.hpp"
 #include "logger/logger.hpp"
 #include "logger/logger_define.hpp"
+#include <sgutils/json_reader.hpp>
 
 int main(int argc, char* argv[])
 {
@@ -11,22 +12,18 @@ int main(int argc, char* argv[])
 	logger::get_instance();
 	try {
 		if (argc < 2) {
-			SPDLOG_INFO("Usage: ppproxy config.json");
+			SPDLOG_INFO("Usage: ppbroker config.json");
 			return EXIT_FAILURE;
 		}
 
 		// Load config file
-		// ..
+		sg::json_reader reader{};
+		reader.read(argv[1]);
+
 		zmqpp::context_t ctx;
 		ppbroker broker(ctx);
-		broker.start("tcp://*:5555", "tcp://*:5556");
-
-		// stop
-		//std::thread t([&ctx]() {
-		//	std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-		//	ctx.terminate();
-		//	});
-		//t.join();
+		broker.start(reader.get<std::string>("frontend_host"), 
+			reader.get<std::string>("backend_host"));
 	}
 	catch (std::exception const& ex) {
 		SPDLOG_ERROR(ex.what());
