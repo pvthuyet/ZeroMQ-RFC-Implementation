@@ -51,6 +51,7 @@ void lpclient::run()
 		while (retries) {
 			zmqpp::message_t req;
 			req << ++seq;
+			req << "hello";
 			sock_->send(req);
 			std::this_thread::sleep_for(milli(1));
 
@@ -70,8 +71,9 @@ void lpclient::run()
 					zmqpp::message_t msg;
 					sock_->receive(msg);
 					auto msgid = msg.get<int>(0);
+					auto body = msg.get<std::string>(1);
 					if (msgid == seq) {
-						SPDLOG_DEBUG("Server replied {}", msgid);
+						SPDLOG_DEBUG("{} {}", body, msgid);
 						retries = REQUEST_RETRIES;
 						expect_reply = false;
 					}

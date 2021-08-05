@@ -70,18 +70,9 @@ void ppworker::run()
 				// 1-part "HEARTBEAT" -> heartbeat
 				zmqpp::message_t msg;
 				sock_->receive(msg);
-
 				auto parts = msg.parts();
-				if (1 != parts && 3 != parts) {
-					SPDLOG_ERROR("{} invalid message", identity_);
-					continue;
-				}
 
-				if (3 == parts) {
-					sock_->send(msg);
-					liveness = HEARTBEAT_LIVENESS;
-				}
-				else {
+				if (msg.parts() == 1) {
 					auto body = msg.get<std::string>(0);
 					if (body == "HEARTBEAT"s) {
 						liveness = HEARTBEAT_LIVENESS;
@@ -90,6 +81,10 @@ void ppworker::run()
 					else {
 						SPDLOG_ERROR("{} {}: invalid message", identity_, body);
 					}
+				}
+				else {
+					sock_->send(msg);
+					liveness = HEARTBEAT_LIVENESS;
 				}
 			}
 			else if (--liveness == 0) {
