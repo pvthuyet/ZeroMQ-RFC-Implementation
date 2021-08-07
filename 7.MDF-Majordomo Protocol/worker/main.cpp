@@ -3,6 +3,7 @@
 #include "logger/logger.hpp"
 #include "logger/logger_define.hpp"
 #include "utils/config_parser.hpp"
+#include "mdworker_factory.hpp"
 
 int main(int argc, char* argv[])
 {
@@ -10,7 +11,7 @@ int main(int argc, char* argv[])
 	logger::get_instance();
 	try {
 		if (argc < 2) {
-			SPDLOG_INFO("Usage: ppworker config.json");
+			SPDLOG_INFO("Usage: mdworker config.json");
 			return EXIT_FAILURE;
 		}
 
@@ -19,12 +20,13 @@ int main(int argc, char* argv[])
 		conf.load(argv[1]);
 
 		zmqpp::context_t ctx;
-		sg::echoworker echowrk(ctx,
-			conf.get_value("backend_endpoint"),
-			conf.get_value("admin_endpoint")
-		);
-		echowrk.start();
-		echowrk.wait();
+		auto wrks = mdworker_factory{}.create(ctx, conf);
+
+		// start all workers
+		for (auto& w : wrks) w->start();
+
+		// Wait to exit
+		for (auto& w : wrks) w->wait();
 	}
 	catch (const std::exception& ex) {
 		SPDLOG_ERROR(ex.what());

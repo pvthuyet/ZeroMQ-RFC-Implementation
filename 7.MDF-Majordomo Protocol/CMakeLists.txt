@@ -12,7 +12,7 @@ add_executable(mdworker
 	"worker/main.cpp"
 	"worker/mdworker.cpp"
 	"worker/echoworker.cpp"
- )
+  "worker/mdworker_factory.hpp" "worker/mdworker_factory.cpp")
 target_include_directories(mdworker PRIVATE ${SGLIB_INCLUDEDIR} ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(mdworker PRIVATE ${WINDOWS_LIBRARIES} ${SGLIB_LIBRARIES})
 
