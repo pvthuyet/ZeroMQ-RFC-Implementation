@@ -41,7 +41,9 @@ void mdwrkapi::connect_to_broker()
 	// initialize worker
 	worker_ = std::make_unique<zmqpp::socket_t>(ctx_, zmqpp::socket_type::dealer);
 	worker_->set(zmqpp::socket_option::linger, 0);
-	worker_->set(zmqpp::socket_option::identity, id_);
+	if (!id_.empty()) {
+		worker_->set(zmqpp::socket_option::identity, id_);
+	}
 
 	// connect to service with broker
 	SPDLOG_INFO("Connecting to broker at {}", broker_);

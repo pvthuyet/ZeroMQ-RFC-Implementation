@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
 		zmqpp::context_t ctx;
 		ppworker worker(ctx, 
 			reader.get<std::string>("backend_endpoint"), 
-			reader.get<std::string>("admin_subscriber"),
+			reader.get<std::string>("admin_endpoint"),
 			argv[1]);
 		worker.start();
 		worker.wait();

@@ -8,7 +8,7 @@ public:
 	echoworker(zmqpp::context_t& ctx,
 		std::string_view brokerep,
 		std::string_view adminep,
-		std::string_view identity
+		std::string_view identity = ""
 	);
 
 private:

@@ -32,7 +32,7 @@ public:
 	mdwrkapi(zmqpp::context_t& ctx,
 		std::string_view broker, 
 		std::string_view name,
-		std::string_view id);
+		std::string_view id = "");
 
 	zmqpp::context_t& get_context() const;
 	std::string get_broker() const;

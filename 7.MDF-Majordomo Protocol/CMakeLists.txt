@@ -5,8 +5,10 @@ add_compile_definitions(DEBUG_ON) # for write debug spdlog
 add_executable(mdworker
 	"${CMAKE_SOURCE_DIR}/logger/logger.cpp"
 	"${CMAKE_SOURCE_DIR}/utils/zmqutil.cpp"
+	"${CMAKE_SOURCE_DIR}/utils/config_parser.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/worker/mdwrkapi.cpp"
 	"${CMAKE_SOURCE_DIR}/admin/sub_admin.cpp"
+	"${CMAKE_SOURCE_DIR}/interface/iworker.cpp"
 	"worker/main.cpp"
 	"worker/mdworker.cpp"
 	"worker/echoworker.cpp"

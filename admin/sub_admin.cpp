@@ -9,7 +9,23 @@ sub_admin::sub_admin(zmqpp::context_t& ctx, std::string_view ep) :
 	endpoint_{ ep }
 {}
 
+void sub_admin::start()
+{
+	if (!thread_) {
+		thread_ = std::make_unique<std::jthread>([this](std::stop_token tok) {
+			this->run();
+			});
+	}
+}
+
 void sub_admin::wait()
+{
+	if (thread_ && thread_->joinable()) {
+		thread_->join();
+	}
+}
+
+void sub_admin::run()
 {
 	LOGENTER;
 	using namespace std::string_literals;

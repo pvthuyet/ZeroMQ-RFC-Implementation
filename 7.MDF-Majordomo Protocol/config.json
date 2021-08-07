@@ -1,8 +1,26 @@
 {
+  "admin_host": "tcp://*:5557",
+  "admin_endpoint": "tcp://localhost:5557",
   "frontend_host": "tcp://*:5555",
   "backend_host": "tcp://*:5556",
   "frontend_endpoint": "tcp://localhost:5555",
   "backend_endpoint": "tcp://localhost:5556",
-  "admin_host": "tcp://*:5557",
-  "admin_subscriber": "tcp://localhost:5557"
+  "services": [
+    {
+      "name": "echo",
+      "quantity": 1
+    },
+    {
+      "name": "coffee",
+      "quantity": 2
+    },
+    {
+      "name": "tea",
+      "quantity": 3
+    },
+    {
+      "name": "water",
+      "quantity": 1
+    }
+  ]
 }
