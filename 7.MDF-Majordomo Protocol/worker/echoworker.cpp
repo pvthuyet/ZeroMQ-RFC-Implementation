@@ -15,8 +15,8 @@ echoworker::echoworker(zmqpp::context_t& ctx,
 void echoworker::run(std::stop_token tok)
 {
 	LOGENTER;
-	session_.connect_to_broker();
 	try {
+		session_.connect_to_broker();
 		while (true) {
 			auto req = session_.recv(tok);
 			if (req) {

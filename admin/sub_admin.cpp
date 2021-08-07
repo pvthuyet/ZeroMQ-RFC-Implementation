@@ -29,16 +29,22 @@ void sub_admin::run()
 {
 	LOGENTER;
 	using namespace std::string_literals;
-	zmqpp::socket_t subscriber(ctx_, zmqpp::socket_type::subscribe);
-	subscriber.connect(endpoint_);
-	subscriber.set(zmqpp::socket_option::linger, 0);
-	subscriber.set(zmqpp::socket_option::subscribe, "");
-	while (true) {
-		std::string msg;
-		subscriber.receive(msg);
-		if (boost::iequals("STOP"s, msg)) {
-			break;
+	try {
+
+		zmqpp::socket_t subscriber(ctx_, zmqpp::socket_type::subscribe);
+		subscriber.connect(endpoint_);
+		subscriber.set(zmqpp::socket_option::linger, 0);
+		subscriber.set(zmqpp::socket_option::subscribe, "");
+		while (true) {
+			std::string msg;
+			subscriber.receive(msg);
+			if (boost::iequals("STOP"s, msg)) {
+				break;
+			}
 		}
+	}
+	catch (std::exception const& ex) {
+		SPDLOG_ERROR(ex.what());
 	}
 	LOGEXIT;
 }

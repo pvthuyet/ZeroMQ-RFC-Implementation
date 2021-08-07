@@ -5,6 +5,8 @@ SAIGON_NAMESPACE_BEGIN
 class echoworker : public mdworker
 {
 public:
+	inline static const std::string NAME = "echo";
+public:
 	echoworker(zmqpp::context_t& ctx,
 		std::string_view brokerep,
 		std::string_view adminep,
