@@ -89,3 +89,4 @@ message(STATUS "SGLIB_LIBRARIES: ${SGLIB_LIBRARIES}")
 ### example
 add_subdirectory("admin")
 add_subdirectory("6.PPP-Paranoid Pirate Protocol")
+add_subdirectory("7.MDF-Majordomo Protocol")
