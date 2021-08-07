@@ -1,6 +1,7 @@
 #include "sub_admin.hpp"
 #include <iostream>
 #include "logger/logger_define.hpp"
+#include <boost/algorithm/string.hpp>
 
 SAIGON_NAMESPACE_BEGIN
 sub_admin::sub_admin(zmqpp::context_t& ctx, std::string_view ep) :
@@ -19,7 +20,7 @@ void sub_admin::wait()
 	while (true) {
 		std::string msg;
 		subscriber.receive(msg);
-		if ("STOP"s == msg) {
+		if (boost::iequals("STOP"s, msg)) {
 			break;
 		}
 	}

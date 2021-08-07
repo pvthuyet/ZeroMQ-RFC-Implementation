@@ -6,19 +6,37 @@
 #include <algorithm>
 
 SAIGON_NAMESPACE_BEGIN
-mdwrk::mdwrk(zmqpp::context_t& ctx, 
+mdwrkapi::mdwrkapi(zmqpp::context_t& ctx, 
 	std::string_view broker, 
-	std::string_view service,
+	std::string_view name,
 	std::string_view id) :
 	ctx_{ ctx },
 	broker_{broker},
-	service_{service},
+	service_name_{name},
 	id_{id}
+{}
+
+zmqpp::context_t& mdwrkapi::get_context() const
 {
-	connect_to_broker();
+	return ctx_;
 }
 
-void mdwrk::connect_to_broker()
+std::string mdwrkapi::get_broker() const
+{
+	return broker_;
+}
+
+std::string mdwrkapi::get_service_name() const
+{
+	return service_name_;
+}
+
+std::string mdwrkapi::get_id() const
+{
+	return id_;
+}
+
+void mdwrkapi::connect_to_broker()
 {
 	// initialize worker
 	worker_ = std::make_unique<zmqpp::socket_t>(ctx_, zmqpp::socket_type::dealer);
@@ -30,14 +48,14 @@ void mdwrk::connect_to_broker()
 	worker_->connect(broker_);
 
 	// register service with broker
-	send_to_broker(MDPW_READY, service_, zmqpp::message_t{});
+	send_to_broker(MDPW_READY, service_name_, zmqpp::message_t{});
 
 	// if liveness hits zero, queue is considered disconnected
 	liveness_ = HEARTBEAT_LIVENESS;
 	heartbeat_at_ = std::chrono::steady_clock::now() + std::chrono::milliseconds(heartbeat_);
 }
 
-bool mdwrk::send(std::optional<zmqpp::message_t>&& msg)
+bool mdwrkapi::send(std::optional<zmqpp::message_t>&& msg)
 {
 	Ensures(msg || !expect_reply_);
 	if (msg) {
@@ -50,10 +68,17 @@ bool mdwrk::send(std::optional<zmqpp::message_t>&& msg)
 	return false;
 }
 
-std::optional<zmqpp::message_t> mdwrk::recv()
+std::optional<zmqpp::message_t> mdwrkapi::recv(std::stop_token tok)
 {
 	expect_reply_ = true;
 	zmqpp::message_t msg;
+
+	auto stopcb = [&tok]() -> bool {
+		if (tok.stop_requested()) {
+			throw std::runtime_error("Received stopped request");
+		}
+		return true;
+	};
 
 	auto retry = [this]() -> bool {
 		if (--liveness_ == 0) {
@@ -119,17 +144,18 @@ std::optional<zmqpp::message_t> mdwrk::recv()
 
 	while(true){
 		zmqpp::loop loop{};
+		loop.add(std::chrono::milliseconds(heartbeat_), 0, stopcb);
 		loop.add(std::chrono::milliseconds(heartbeat_), 0, retry);
 		loop.add(*worker_.get(), recevmsg);
 		loop.start();
-
-		if (msg.parts()) break;
+		if (msg.parts()) {
+			return std::make_optional<zmqpp::message_t>(std::move(msg));
+		}
 	}
-
-	return std::make_optional<zmqpp::message_t>(std::move(msg));
+	return std::nullopt;
 }
 
-bool mdwrk::send_to_broker(std::string_view command, 
+bool mdwrkapi::send_to_broker(std::string_view command, 
 	std::string_view option,
 	zmqpp::message_t&& msg)
 {

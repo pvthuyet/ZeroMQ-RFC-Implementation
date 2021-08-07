@@ -1,27 +1,34 @@
 #include <vld.h>
-#include "mdwrkapi.hpp"
+#include "echoworker.hpp"
 #include "logger/logger.hpp"
 #include "logger/logger_define.hpp"
-#include <boost/stacktrace.hpp>
+#include <sgutils/json_reader.hpp>
 
-int main()
+int main(int argc, char* argv[])
 {
 	using namespace sg;
 	logger::get_instance();
 	try {
-		zmqpp::context_t ctx;
-		sg::mdwrk session(ctx, "tcp://localhost:5555", "echo", "001");
-		while (1) {
-			auto req = session.recv();
-			if (req) {
-				session.send(std::move(req));
-			}
+		if (argc < 3) {
+			SPDLOG_INFO("Usage: ppworker 12345 config.json");
+			return EXIT_FAILURE;
 		}
+
+		// Load config file
+		sg::json_reader reader;
+		reader.read(argv[2]);
+
+		zmqpp::context_t ctx;
+		sg::echoworker echowrk(ctx,
+			reader.get<std::string>("backend_endpoint"),
+			reader.get<std::string>("admin_subscriber"),
+			argv[1]
+		);
+		echowrk.start();
+		echowrk.wait();
 	}
 	catch (const std::exception& ex) {
-		//SPDLOG_ERROR(ex.what());
-		//SPDLOG_ERROR(boost::stacktrace::stacktrace());
-		std::cerr << boost::stacktrace::stacktrace() << std::endl;
+		SPDLOG_ERROR(ex.what());
 	}
 
 
