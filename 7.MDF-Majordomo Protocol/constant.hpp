@@ -1,8 +1,11 @@
 #pragma once
 
+#include <string>
+
 //  Reliability parameters
-constexpr int HEARTBEAT_LIVENESS = 5;       //  3-5 is reasonable
-constexpr int HEARTBEAT_DELAY = 2500;
+constexpr int HEARTBEAT_LIVENESS	= 3;       //  3-5 is reasonable
+constexpr int HEARTBEAT_INTERVAL	= 2500;
+constexpr int HEARTBEAT_EXPIRY		= HEARTBEAT_INTERVAL * HEARTBEAT_LIVENESS;
 
 // For config file
 const std::string ADMIN_HOST		= "admin_host";

@@ -12,9 +12,19 @@ add_executable(mdworker
 	"worker/main.cpp"
 	"worker/mdworker.cpp"
 	"worker/echoworker.cpp"
-  "worker/mdworker_factory.hpp" "worker/mdworker_factory.cpp")
+	"worker/mdworker_factory.cpp")
 target_include_directories(mdworker PRIVATE ${SGLIB_INCLUDEDIR} ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(mdworker PRIVATE ${WINDOWS_LIBRARIES} ${SGLIB_LIBRARIES})
+
+add_executable(mdbroker
+	"${CMAKE_SOURCE_DIR}/logger/logger.cpp"
+	"${CMAKE_SOURCE_DIR}/utils/zmqutil.cpp"
+	"${CMAKE_SOURCE_DIR}/utils/config_parser.cpp"
+	"${CMAKE_SOURCE_DIR}/admin/sub_admin.cpp"
+	"broker/main.cpp"	
+ "broker/mdbroker.cpp")
+target_include_directories(mdbroker PRIVATE ${SGLIB_INCLUDEDIR} ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(mdbroker PRIVATE ${WINDOWS_LIBRARIES} ${SGLIB_LIBRARIES})
 
 # Config file
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/config.json" "${CMAKE_CURRENT_BINARY_DIR}/config.json" COPYONLY)

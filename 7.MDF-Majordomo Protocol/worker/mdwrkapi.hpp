@@ -19,8 +19,8 @@ private:
 	// Heartbeat management
 	std::chrono::steady_clock::time_point heartbeat_at_;	// when to send HEARTBEAT
 	size_t	liveness_{};	// How many attempts left
-	int		heartbeat_{HEARTBEAT_DELAY};		// Heartbeat delay, msec
-	int		reconnect_{HEARTBEAT_DELAY};		// Reconnect delay, msec
+	int		heartbeat_{ HEARTBEAT_INTERVAL };		// Heartbeat delay, msec
+	int		reconnect_{ HEARTBEAT_INTERVAL };		// Reconnect delay, msec
 
 	// Internal state
 	bool expect_reply_{};	// Zero only at start
