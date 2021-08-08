@@ -132,6 +132,7 @@ std::optional<zmqpp::message_t> mdwrkapi::recv(std::stop_token tok)
 		}
 		else if (cmd == MDPW_HEARTBEAT) {
 			// TODO: Do nothing for heartbeat
+			heartbeat_at_ += std::chrono::milliseconds(HEARTBEAT_INTERVAL);
 		}
 		else if (cmd == MDPW_DISCONNECT) {
 			connect_to_broker();

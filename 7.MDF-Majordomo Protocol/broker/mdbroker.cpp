@@ -38,56 +38,111 @@ void mdbroker::wait()
 	admin_.wait();
 }
 
+//void mdbroker::run(std::stop_token tok)
+//{
+//	LOGENTER;
+//	try {
+//		zmqpp::loop loop{};
+//
+//		// timer
+//		loop.add(std::chrono::milliseconds(HEARTBEAT_EXPIRY), 0, [this, tok]() -> bool {
+//			//  Disconnect and delete any expired workers
+//			//  Send heartbeats to idle workers if needed
+//			// TODO
+//			if (tok.stop_requested()) return false; // throw std::runtime_error("Stop request");
+//			return true;
+//			});
+//
+//		// socket
+//		auto cbevent = [this](zmqpp::socket_t& sock) -> bool {
+//			zmqpp::message_t msg;
+//			sock.receive(msg);
+//			SPDLOG_DEBUG("Received message");
+//			zmqutil::dump(msg);
+//
+//			// identity of sender
+//			auto sender = msg.get<std::string>(0);
+//			msg.pop_front();
+//
+//			// Frame 0: empty
+//			msg.pop_front();
+//
+//			// Frame 1: sender type : client or worker
+//			auto header = msg.get<std::string>(0);
+//			msg.pop_front();
+//
+//			if (header == MDPC_CLIENT) {
+//				// TODO
+//			}
+//			else if (header == MDPW_WORKER) {
+//				worker_process(sender, msg);
+//			}
+//			else {
+//				SPDLOG_ERROR("Invalid message");
+//			}
+//			return true;
+//		};
+//
+//		loop.add(*socket_, std::bind(cbevent, std::ref(*socket_)));
+//
+//		loop.start();
+//	}
+//	catch (std::exception const& ex) {
+//		SPDLOG_ERROR(ex.what());
+//	}
+//	LOGEXIT;
+//}
+
 void mdbroker::run(std::stop_token tok)
 {
 	LOGENTER;
 	try {
-		zmqpp::loop loop{};
+		zmqpp::poller_t poller;
+		poller.add(*socket_);
 
-		// timer
-		loop.add(std::chrono::milliseconds(HEARTBEAT_INTERVAL), 0, [this, tok]() -> bool {
+		auto heartbeat_at = std::chrono::steady_clock::now() + std::chrono::milliseconds(HEARTBEAT_INTERVAL);
+
+		while (!tok.stop_requested()) {
+			poller.poll(HEARTBEAT_EXPIRY);
+
+			if (poller.events(*socket_) == zmqpp::poller_t::poll_in) {
+				zmqpp::message_t msg;
+				socket_->receive(msg);
+				SPDLOG_DEBUG("Received message");
+				zmqutil::dump(msg);
+
+				// identity of sender
+				auto sender = msg.get<std::string>(0);
+				msg.pop_front();
+
+				// Frame 0: empty
+				msg.pop_front();
+
+				// Frame 1: sender type : client or worker
+				auto header = msg.get<std::string>(0);
+				msg.pop_front();
+
+				if (header == MDPC_CLIENT) {
+					// TODO
+				}
+				else if (header == MDPW_WORKER) {
+					worker_process(sender, msg);
+				}
+				else {
+					SPDLOG_ERROR("Invalid message");
+				}
+			}
+
 			//  Disconnect and delete any expired workers
 			//  Send heartbeats to idle workers if needed
-			// TODO
-			if (tok.stop_requested()) throw std::runtime_error("Stop request");
-			return true;
-			});
-
-		// socket
-		auto cbevent = [this, tok](zmqpp::socket_t& sock) -> bool {
-			if (tok.stop_requested()) throw std::runtime_error("Stop request");
-
-			zmqpp::message_t msg;
-			sock.receive(msg);
-			SPDLOG_DEBUG("Received message");
-			zmqutil::dump(msg);
-
-			// identity of sender
-			auto sender = msg.get<std::string>(0);
-			msg.pop_front();
-
-			// Frame 0: empty
-			msg.pop_front();
-
-			// Frame 1: sender type : client or worker
-			auto header = msg.get<std::string>(0);
-			msg.pop_front();
-
-			if (header == MDPC_CLIENT) {
-				// TODO
+			auto now = std::chrono::steady_clock::now();
+			if (now > heartbeat_at) {
+				for (auto& [k, v] : workers_) {
+					worker_send(v, MDPW_HEARTBEAT, "", zmqpp::message_t{});
+				}
+				heartbeat_at = std::chrono::steady_clock::now() + std::chrono::milliseconds(HEARTBEAT_INTERVAL);
 			}
-			else if (header == MDPW_WORKER) {
-				worker_process(sender, msg);
-			}
-			else {
-				SPDLOG_ERROR("Invalid message");
-			}
-			return true;
-		};
-
-		loop.add(*socket_, std::bind(cbevent, std::ref(*socket_)));
-
-		loop.start();
+		}
 	}
 	catch (std::exception const& ex) {
 		SPDLOG_ERROR(ex.what());
@@ -159,6 +214,19 @@ mdbroker::service& mdbroker::service_require(std::string const& name)
 	}
 
 	return services_.at(name);
+}
+
+void mdbroker::worker_send(mdbroker::worker& wrk, std::string_view command, std::string_view option, zmqpp::message_t msg)
+{
+	if (option.size() > 0) {
+		msg.push_front(option.data());
+	}
+
+	msg.push_front(command.data());
+	msg.push_front(MDPW_WORKER);
+	msg.push_front("");
+	msg.push_front(wrk.identity_);
+	socket_->send(msg);
 }
 
 SAIGON_NAMESPACE_END

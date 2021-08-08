@@ -51,5 +51,9 @@ private:
 	void worker_process(std::string const& sender, zmqpp::message_t& msg);
 	mdbroker::worker& worker_require(std::string const& sender);
 	mdbroker::service& service_require(std::string const& name);
+
+	void worker_send(mdbroker::worker& wrk, 
+		std::string_view command, 
+		std::string_view option, zmqpp::message_t msg);
 };
 SAIGON_NAMESPACE_END
