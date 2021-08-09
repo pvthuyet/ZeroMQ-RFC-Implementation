@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <queue>
 
 SAIGON_NAMESPACE_BEGIN
 class mdbroker
@@ -15,20 +16,20 @@ class mdbroker
 		std::string identity_;
 		std::string service_name_;
 		std::chrono::steady_clock::time_point expiry_;
-		void update_expiry()
-		{
-			expiry_ = std::chrono::steady_clock::now() + std::chrono::milliseconds(HEARTBEAT_EXPIRY);
-		}
+		void update_expiry();
 	};
 
 	struct service
 	{
 		std::string name_;
 		std::vector<std::string> waiting_workers_;
-		void delete_waiting_worker(std::string const& wrkid)
-		{
-			std::erase(waiting_workers_, wrkid);
-		}
+		std::queue<zmqpp::message_t> requests_;
+
+		void delete_waiting_worker(std::string const& wrkid);
+		void add_waiting_worker(const std::string& wrkid);
+
+		void push_request(zmqpp::message_t&& req);
+		zmqpp::message_t pop_request();
 	};
 
 private:
@@ -63,5 +64,7 @@ private:
 		std::string_view command, 
 		std::string_view option, 
 		zmqpp::message_t&& msg);
+	void worker_waiting(mdbroker::worker& worker);
+	void service_dispatch(mdbroker::service& service, std::optional<zmqpp::message_t>&& msg);
 };
 SAIGON_NAMESPACE_END

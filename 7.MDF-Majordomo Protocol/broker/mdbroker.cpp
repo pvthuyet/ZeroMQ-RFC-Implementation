@@ -6,6 +6,37 @@
 #include <deque>
 
 SAIGON_NAMESPACE_BEGIN
+
+//--------------------------------------------------------------------------
+void mdbroker::worker::update_expiry()
+{
+	expiry_ = std::chrono::steady_clock::now() + std::chrono::milliseconds(HEARTBEAT_EXPIRY);
+}
+
+//--------------------------------------------------------------------------
+void mdbroker::service::delete_waiting_worker(std::string const& wrkid)
+{
+	std::erase(waiting_workers_, wrkid);
+}
+void mdbroker::service::add_waiting_worker(const std::string& wrkid)
+{
+	waiting_workers_.push_back(wrkid);
+}
+
+void mdbroker::service::push_request(zmqpp::message_t&& req)
+{
+	requests_.push(std::move(req));
+}
+
+zmqpp::message_t mdbroker::service::pop_request()
+{
+	Ensures(requests_.size());
+	zmqpp::message_t req{};
+	std::swap(req, requests_.front());
+	requests_.pop();
+	return req;
+}
+
 mdbroker::mdbroker(zmqpp::context_t& ctx, 
 	std::string_view host,
 	std::string_view adminep):
@@ -112,33 +143,45 @@ void mdbroker::worker_process(std::string const& sender, zmqpp::message_t& msg)
 	auto cmd = msg.get<std::string>(0);
 	msg.pop_front();
 
-	bool worker_ready = workers_.count(sender) > 0;
-
+	bool isready = workers_.count(sender) > 0;
 	auto& wrk = worker_require(sender);
 
+	// Valid the command for this worker
+	bool isnotvalid = (cmd == MDPW_HEARTBEAT && !isready) ||
+		(cmd == MDPW_REPLY && !isready) ||
+		(cmd == MDPW_READY && isready);
+	if (isnotvalid) {
+		worker_delete(wrk.identity_, true);
+		return;
+	}
+
 	if (cmd == MDPW_HEARTBEAT) {
-		if (worker_ready) {
-			wrk.update_expiry();
-		}
-		else {
-			worker_delete(wrk.identity_, true);
-		}
+		wrk.update_expiry();
 	}
 	else if (cmd == MDPW_REPLY) {
-		// TODO
+		//  Remove & save client return envelope and insert the
+		//  protocol header and service name, then rewrap envelope.
+		// Frame 3: client address
+		auto cliaddr = msg.get<std::string>(0);
+		msg.pop_front();
+
+		// Build message send to client ------------------------------
+		//Frame 0: Empty(zero bytes, invisible to REQ application)
+		//Frame 1 : “MDPC01”(six bytes, representing MDP / Client v0.1)
+		//Frame 2 : Service name(printable string)
+		//Frames 3 + : Reply body(opaque binary)
+		msg.push_front(wrk.service_name_);
+		msg.push_front(MDPC_CLIENT);
+		msg.push_front("");
+		socket_->send(msg); // send reply to client
+		worker_waiting(wrk);
 	}
 	else if (cmd == MDPW_READY) { //  Not first command in session
-		if (worker_ready) {
-			worker_delete(wrk.identity_, true);
-		}
-		else {
-			// TODO .mmi
-			auto srvname = msg.get<std::string>(0);
-			wrk.service_name_ = srvname;
-			auto& srv = service_require(srvname);
-			srv.waiting_workers_.push_back(sender);
-			SPDLOG_DEBUG("Worker '{}-{}' joined", wrk.identity_, wrk.service_name_);
-		}
+		// TODO .mmi
+		auto srvname = msg.get<std::string>(0);
+		wrk.service_name_ = srvname;
+		worker_waiting(wrk);
+		SPDLOG_DEBUG("Worker '{}-{}' joined", wrk.identity_, wrk.service_name_);
 	}
 	else if (cmd == MDPW_DISCONNECT) {
 		worker_delete(wrk.identity_, false);
@@ -233,6 +276,37 @@ void mdbroker::worker_send(std::string const& wrkid,
 	msg.push_front("");
 	msg.push_front(wrkid);
 	socket_->send(msg);
+}
+
+void mdbroker::worker_waiting(mdbroker::worker& worker)
+{
+	worker.update_expiry();
+	auto& service = service_require(worker.service_name_);
+	service.add_waiting_worker(worker.identity_);
+	// Attempt to process outstanding request
+	service_dispatch(service, std::nullopt);
+}
+
+void mdbroker::service_dispatch(mdbroker::service& srv, std::optional<zmqpp::message_t>&& msg)
+{
+	if (msg) {
+		srv.push_request(std::move(*msg));
+	}
+
+	purge_workers();
+	while (!srv.waiting_workers_.empty() && !srv.requests_.empty()) {
+		// Choose the most recently seen idle worker; others might be about to expire
+		auto wrkid = std::min_element(std::cbegin(srv.waiting_workers_),
+			std::cend(srv.waiting_workers_),
+			[this](auto const& a, auto const& b) {
+				return this->workers_.at(a).expiry_ < this->workers_.at(a).expiry_;
+			}
+		);
+		
+		auto req = srv.pop_request();
+		worker_send(*wrkid, MDPW_REQUEST, "", std::move(req));
+		srv.delete_waiting_worker(*wrkid);
+	}
 }
 
 SAIGON_NAMESPACE_END
