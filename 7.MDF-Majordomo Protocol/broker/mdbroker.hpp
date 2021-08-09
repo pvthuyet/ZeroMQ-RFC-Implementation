@@ -53,10 +53,10 @@ public:
 
 private:
 	void run(std::stop_token tok);
+	
 	void worker_process(std::string const& sender, zmqpp::message_t& msg);
 	mdbroker::worker& worker_require(std::string const& sender);
 	mdbroker::service& service_require(std::string const& name);
-
 	void purge_workers();
 	std::chrono::steady_clock::time_point worker_send_heartbeat();
 	void worker_delete(std::string wrkid, bool disconnect);
@@ -65,6 +65,10 @@ private:
 		std::string_view option, 
 		zmqpp::message_t&& msg);
 	void worker_waiting(mdbroker::worker& worker);
-	void service_dispatch(mdbroker::service& service, std::optional<zmqpp::message_t>&& msg);
+	void service_dispatch(mdbroker::service& service, 
+		std::optional<zmqpp::message_t>&& msg);
+
+	// Client
+	void client_process(std::string const& sender, zmqpp::message_t& msg);
 };
 SAIGON_NAMESPACE_END

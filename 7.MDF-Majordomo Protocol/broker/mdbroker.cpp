@@ -115,7 +115,7 @@ void mdbroker::run(std::stop_token tok)
 			msg.pop_front();
 
 			if (header == MDPC_CLIENT) {
-				// TODO
+				client_process(sender, msg);
 			}
 			else if (header == MDPW_WORKER) {
 				worker_process(sender, msg);
@@ -307,6 +307,37 @@ void mdbroker::service_dispatch(mdbroker::service& srv, std::optional<zmqpp::mes
 		worker_send(*wrkid, MDPW_REQUEST, "", std::move(req));
 		srv.delete_waiting_worker(*wrkid);
 	}
+}
+
+void mdbroker::client_process(std::string const& sender, zmqpp::message_t& msg)
+{
+	// ** Message format from Client
+	//Frame 0: Empty(zero bytes, invisible to REQ application)
+	//Frame 1 : “MDPC01”(six bytes, representing MDP / Client v0.1)
+	//Frame 2 : Service name(printable string)
+	//Frames 3 + : Request body(opaque binary)
+
+	// ** Message format to worker
+	//Frame 0: Empty frame
+	//Frame 1 : “MDPW01”(six bytes, representing MDP / Worker v0.1)
+	//Frame 2 : 0x02 (one byte, representing REQUEST)
+	//Frame 3 : Client address(envelope stack)
+	//Frame 4 : Empty(zero bytes, envelope delimiter)
+	//Frames 5 + : Request body(opaque binary)
+
+	// Service name and body
+	Ensures(msg.parts() >= 2);
+	// 
+	auto service_name = msg.get<std::string>(0);
+	msg.pop_front();
+
+	auto& srv = service_require(service_name);
+	// set  reply return address to client sender
+	msg.push_front("");
+	msg.push_front(sender);
+
+	// TODO "mmi."
+	service_dispatch(srv, std::make_optional<zmqpp::message_t>(std::move(msg)));
 }
 
 SAIGON_NAMESPACE_END
