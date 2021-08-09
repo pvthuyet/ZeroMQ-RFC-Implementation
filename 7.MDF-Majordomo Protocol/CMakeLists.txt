@@ -28,3 +28,4 @@ target_link_libraries(mdbroker PRIVATE ${WINDOWS_LIBRARIES} ${SGLIB_LIBRARIES})
 
 # Config file
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/config.json" "${CMAKE_CURRENT_BINARY_DIR}/config.json" COPYONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/run.bat" "${CMAKE_CURRENT_BINARY_DIR}/run.bat" COPYONLY)

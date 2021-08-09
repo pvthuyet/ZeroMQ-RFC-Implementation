@@ -25,6 +25,10 @@ class mdbroker
 	{
 		std::string name_;
 		std::vector<std::string> waiting_workers_;
+		void delete_waiting_worker(std::string const& wrkid)
+		{
+			std::erase(waiting_workers_, wrkid);
+		}
 	};
 
 private:
@@ -52,8 +56,12 @@ private:
 	mdbroker::worker& worker_require(std::string const& sender);
 	mdbroker::service& service_require(std::string const& name);
 
-	void worker_send(mdbroker::worker& wrk, 
+	void purge_workers();
+	std::chrono::steady_clock::time_point worker_send_heartbeat();
+	void worker_delete(std::string wrkid, bool disconnect);
+	void worker_send(std::string const& wrkid,
 		std::string_view command, 
-		std::string_view option, zmqpp::message_t msg);
+		std::string_view option, 
+		zmqpp::message_t&& msg);
 };
 SAIGON_NAMESPACE_END

@@ -2,6 +2,8 @@
 #include "utils/zmqutil.hpp"
 #include "mdp.h"
 #include "logger/logger_define.hpp"
+#include "gsl/gsl_assert"
+#include <deque>
 
 SAIGON_NAMESPACE_BEGIN
 mdbroker::mdbroker(zmqpp::context_t& ctx, 
@@ -96,20 +98,22 @@ void mdbroker::wait()
 void mdbroker::run(std::stop_token tok)
 {
 	LOGENTER;
+	using clock = std::chrono::steady_clock;
+	using milli = std::chrono::milliseconds;
 	try {
 		zmqpp::poller_t poller;
 		poller.add(*socket_);
 
-		auto heartbeat_at = std::chrono::steady_clock::now() + std::chrono::milliseconds(HEARTBEAT_INTERVAL);
+		auto heartbeat_at = clock::now() + milli(HEARTBEAT_INTERVAL);
 
 		while (!tok.stop_requested()) {
-			poller.poll(HEARTBEAT_EXPIRY);
+			poller.poll(HEARTBEAT_INTERVAL);
 
 			if (poller.events(*socket_) == zmqpp::poller_t::poll_in) {
 				zmqpp::message_t msg;
 				socket_->receive(msg);
-				SPDLOG_DEBUG("Received message");
-				zmqutil::dump(msg);
+				//SPDLOG_DEBUG("Received message");
+				//zmqutil::dump(msg);
 
 				// identity of sender
 				auto sender = msg.get<std::string>(0);
@@ -135,12 +139,9 @@ void mdbroker::run(std::stop_token tok)
 
 			//  Disconnect and delete any expired workers
 			//  Send heartbeats to idle workers if needed
-			auto now = std::chrono::steady_clock::now();
-			if (now > heartbeat_at) {
-				for (auto& [k, v] : workers_) {
-					worker_send(v, MDPW_HEARTBEAT, "", zmqpp::message_t{});
-				}
-				heartbeat_at = std::chrono::steady_clock::now() + std::chrono::milliseconds(HEARTBEAT_INTERVAL);
+			if (clock::now() > heartbeat_at) {
+				purge_workers();
+				heartbeat_at = worker_send_heartbeat();
 			}
 		}
 	}
@@ -159,9 +160,21 @@ void mdbroker::worker_process(std::string const& sender, zmqpp::message_t& msg)
 	bool worker_ready = workers_.count(sender) > 0;
 
 	auto& wrk = worker_require(sender);
-	if (cmd == MDPW_READY) {
+
+	if (cmd == MDPW_HEARTBEAT) {
 		if (worker_ready) {
-			// TODO remove old one
+			wrk.update_expiry();
+		}
+		else {
+			worker_delete(wrk.identity_, true);
+		}
+	}
+	else if (cmd == MDPW_REPLY) {
+		// TODO
+	}
+	else if (cmd == MDPW_READY) { //  Not first command in session
+		if (worker_ready) {
+			worker_delete(wrk.identity_, true);
 		}
 		else {
 			// TODO .mmi
@@ -169,21 +182,11 @@ void mdbroker::worker_process(std::string const& sender, zmqpp::message_t& msg)
 			wrk.service_name_ = srvname;
 			auto& srv = service_require(srvname);
 			srv.waiting_workers_.push_back(sender);
-		}
-	}
-	else if (cmd == MDPW_HEARTBEAT) {
-		if (worker_ready) {
-			wrk.update_expiry();
-		}
-		else {
-			// TODO delete
+			SPDLOG_DEBUG("Worker '{} {}' joined", wrk.identity_, wrk.service_name_);
 		}
 	}
 	else if (cmd == MDPW_DISCONNECT) {
-		// TODO
-	}
-	else if (cmd == MDPW_REPLY) {
-		// TODO
+		worker_delete(wrk.identity_, false);
 	}
 	else {
 		SPDLOG_ERROR("Invalid input message ({})", (int)*cmd.c_str());
@@ -216,8 +219,56 @@ mdbroker::service& mdbroker::service_require(std::string const& name)
 	return services_.at(name);
 }
 
-void mdbroker::worker_send(mdbroker::worker& wrk, std::string_view command, std::string_view option, zmqpp::message_t msg)
+//  Delete any idle workers that haven't pinged us in a while.
+void mdbroker::purge_workers()
 {
+	auto now = std::chrono::steady_clock::now();
+	std::deque<std::string> to_cull;
+
+	// Collect all expiry workers;
+	for (auto& [k, v] : workers_) {
+		if (now > v.expiry_) {
+			to_cull.push_back(v.identity_);
+			SPDLOG_WARN("Worker '{} {}' is dead", v.identity_, v.service_name_);
+		}
+	}
+
+	// Delete expiry workers
+	for (auto& wrkid : to_cull) {
+		worker_delete(wrkid, false);
+	}
+}
+
+std::chrono::steady_clock::time_point mdbroker::worker_send_heartbeat()
+{
+	for (auto& [k, v] : services_) {
+		for (auto const& wrkid : v.waiting_workers_) {
+			worker_send(wrkid, MDPW_HEARTBEAT, "", zmqpp::message_t{});
+		}
+	}
+	return std::chrono::steady_clock::now() + std::chrono::milliseconds(HEARTBEAT_INTERVAL);
+}
+
+void mdbroker::worker_delete(std::string wrkid, bool disconnect)
+{
+	Ensures(workers_.count(wrkid));
+	if (disconnect) {
+		worker_send(wrkid, MDPW_DISCONNECT, "", zmqpp::message_t{});
+	}
+	// Remove from service's waiting list
+	for (auto& [k, v] : services_) {
+		v.delete_waiting_worker(wrkid);
+	}
+	// Remove from worker list
+	workers_.erase(wrkid);
+}
+
+void mdbroker::worker_send(std::string const& wrkid,
+	std::string_view command, 
+	std::string_view option, 
+	zmqpp::message_t&& msg)
+{
+	Ensures(workers_.count(wrkid));
 	if (option.size() > 0) {
 		msg.push_front(option.data());
 	}
@@ -225,7 +276,7 @@ void mdbroker::worker_send(mdbroker::worker& wrk, std::string_view command, std:
 	msg.push_front(command.data());
 	msg.push_front(MDPW_WORKER);
 	msg.push_front("");
-	msg.push_front(wrk.identity_);
+	msg.push_front(wrkid);
 	socket_->send(msg);
 }
 
