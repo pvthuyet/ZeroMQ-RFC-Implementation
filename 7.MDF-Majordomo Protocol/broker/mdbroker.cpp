@@ -40,102 +40,21 @@ void mdbroker::wait()
 	admin_.wait();
 }
 
-//void mdbroker::run(std::stop_token tok)
-//{
-//	LOGENTER;
-//	try {
-//		zmqpp::loop loop{};
-//
-//		// timer
-//		loop.add(std::chrono::milliseconds(HEARTBEAT_EXPIRY), 0, [this, tok]() -> bool {
-//			//  Disconnect and delete any expired workers
-//			//  Send heartbeats to idle workers if needed
-//			// TODO
-//			if (tok.stop_requested()) return false; // throw std::runtime_error("Stop request");
-//			return true;
-//			});
-//
-//		// socket
-//		auto cbevent = [this](zmqpp::socket_t& sock) -> bool {
-//			zmqpp::message_t msg;
-//			sock.receive(msg);
-//			SPDLOG_DEBUG("Received message");
-//			zmqutil::dump(msg);
-//
-//			// identity of sender
-//			auto sender = msg.get<std::string>(0);
-//			msg.pop_front();
-//
-//			// Frame 0: empty
-//			msg.pop_front();
-//
-//			// Frame 1: sender type : client or worker
-//			auto header = msg.get<std::string>(0);
-//			msg.pop_front();
-//
-//			if (header == MDPC_CLIENT) {
-//				// TODO
-//			}
-//			else if (header == MDPW_WORKER) {
-//				worker_process(sender, msg);
-//			}
-//			else {
-//				SPDLOG_ERROR("Invalid message");
-//			}
-//			return true;
-//		};
-//
-//		loop.add(*socket_, std::bind(cbevent, std::ref(*socket_)));
-//
-//		loop.start();
-//	}
-//	catch (std::exception const& ex) {
-//		SPDLOG_ERROR(ex.what());
-//	}
-//	LOGEXIT;
-//}
-
 void mdbroker::run(std::stop_token tok)
 {
 	LOGENTER;
-	using clock = std::chrono::steady_clock;
-	using milli = std::chrono::milliseconds;
+		using clock = std::chrono::steady_clock;
+		using milli = std::chrono::milliseconds;
 	try {
-		zmqpp::poller_t poller;
-		poller.add(*socket_);
-
 		auto heartbeat_at = clock::now() + milli(HEARTBEAT_INTERVAL);
+		zmqpp::loop loop{};
 
-		while (!tok.stop_requested()) {
-			poller.poll(HEARTBEAT_INTERVAL);
-
-			if (poller.events(*socket_) == zmqpp::poller_t::poll_in) {
-				zmqpp::message_t msg;
-				socket_->receive(msg);
-				//SPDLOG_DEBUG("Received message");
-				//zmqutil::dump(msg);
-
-				// identity of sender
-				auto sender = msg.get<std::string>(0);
-				msg.pop_front();
-
-				// Frame 0: empty
-				msg.pop_front();
-
-				// Frame 1: sender type : client or worker
-				auto header = msg.get<std::string>(0);
-				msg.pop_front();
-
-				if (header == MDPC_CLIENT) {
-					// TODO
-				}
-				else if (header == MDPW_WORKER) {
-					worker_process(sender, msg);
-				}
-				else {
-					SPDLOG_ERROR("Invalid message");
-				}
-			}
+		// timer
+		auto cbtimer = [this, tok, &heartbeat_at]() -> bool {
+			//  Disconnect and delete any expired workers
+			//  Send heartbeats to idle workers if needed
+			// TODO
+			if (tok.stop_requested()) return false; // stop looping
 
 			//  Disconnect and delete any expired workers
 			//  Send heartbeats to idle workers if needed
@@ -143,7 +62,43 @@ void mdbroker::run(std::stop_token tok)
 				purge_workers();
 				heartbeat_at = worker_send_heartbeat();
 			}
-		}
+			return true; // continue looping
+		};
+
+		// socket
+		auto cbsock = [this](zmqpp::socket_t& sock) -> bool {
+			zmqpp::message_t msg;
+			sock.receive(msg);
+			//SPDLOG_DEBUG("Received message");
+			//zmqutil::dump(msg);
+
+			// identity of sender
+			auto sender = msg.get<std::string>(0);
+			msg.pop_front();
+
+			// Frame 0: empty
+			msg.pop_front();
+
+			// Frame 1: sender type : client or worker
+			auto header = msg.get<std::string>(0);
+			msg.pop_front();
+
+			if (header == MDPC_CLIENT) {
+				// TODO
+			}
+			else if (header == MDPW_WORKER) {
+				worker_process(sender, msg);
+			}
+			else {
+				SPDLOG_ERROR("Invalid message");
+			}
+
+			return true; // continue looping
+		};
+
+		loop.add(milli(HEARTBEAT_INTERVAL), 0, cbtimer);
+		loop.add(*socket_, std::bind(cbsock, std::ref(*socket_)));
+		loop.start();
 	}
 	catch (std::exception const& ex) {
 		SPDLOG_ERROR(ex.what());
@@ -182,7 +137,7 @@ void mdbroker::worker_process(std::string const& sender, zmqpp::message_t& msg)
 			wrk.service_name_ = srvname;
 			auto& srv = service_require(srvname);
 			srv.waiting_workers_.push_back(sender);
-			SPDLOG_DEBUG("Worker '{} {}' joined", wrk.identity_, wrk.service_name_);
+			SPDLOG_DEBUG("Worker '{}-{}' joined", wrk.identity_, wrk.service_name_);
 		}
 	}
 	else if (cmd == MDPW_DISCONNECT) {
@@ -229,7 +184,7 @@ void mdbroker::purge_workers()
 	for (auto& [k, v] : workers_) {
 		if (now > v.expiry_) {
 			to_cull.push_back(v.identity_);
-			SPDLOG_WARN("Worker '{} {}' is dead", v.identity_, v.service_name_);
+			SPDLOG_WARN("Worker '{}-{}' is dead", v.identity_, v.service_name_);
 		}
 	}
 
