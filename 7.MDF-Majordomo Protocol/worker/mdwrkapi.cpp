@@ -2,6 +2,7 @@
 #include "mdp.h"
 #include "logger/logger_define.hpp"
 #include "utils/zmqutil.hpp"
+#include "sgutils/random_factor.hpp"
 #include <gsl/gsl_assert>
 #include <algorithm>
 #include <random>
@@ -37,14 +38,6 @@ std::string mdwrkapi::get_id() const
 	return id_;
 }
 
-int gen_num(int a, int b)
-{
-	std::random_device rd;  //Will be used to obtain a seed for the random number engine
-	std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-	std::uniform_int_distribution<> distrib(a, b);
-	return distrib(gen);
-}
-
 void mdwrkapi::connect_to_broker()
 {
 	// initialize worker
@@ -53,7 +46,7 @@ void mdwrkapi::connect_to_broker()
 	std::string strid = id_;
 	if (strid.empty()) {
 		// Generate id number
-		auto num = gen_num(1, 999);
+		auto num = random_factor{}.random_number(1, 999);
 		strid = std::format("{0:05d}", num);
 	}
 	worker_->set(zmqpp::socket_option::identity, strid);
@@ -107,8 +100,8 @@ std::optional<zmqpp::message_t> mdwrkapi::recv(std::stop_token tok)
 
 		if (ZMQ_POLLIN & items[0].revents) {
 			worker_->receive(msg);
-			SPDLOG_DEBUG("Received message from broker");
-			zmqutil::dump(msg);
+			//SPDLOG_DEBUG("Received message from broker");
+			//zmqutil::dump(msg);
 			liveness_ = HEARTBEAT_LIVENESS;
 
 			// Make sure right format
@@ -126,6 +119,7 @@ std::optional<zmqpp::message_t> mdwrkapi::recv(std::stop_token tok)
 			auto cmd = msg.get<std::string>(0);
 			msg.pop_front();
 			if (cmd == MDPW_REQUEST) {
+				zmqutil::dump(msg);
 				//  We should pop and save as many addresses as there are
 				//  up to a null part, but for now, just save one...
 				// Frame 3: Client address (envelope stack)
@@ -175,8 +169,10 @@ bool mdwrkapi::send_to_broker(std::string_view command,
 	msg.push_front(command.data()); // Frame 2: mdps_command
 	msg.push_front(MDPW_WORKER);	// Frame 1: Worker version
 	msg.push_front("");				// Frame 0: Empty frame
-	SPDLOG_DEBUG("Sending {} to broker", mdps_commands[static_cast<int>(*command.data())]);
-	zmqutil::dump(msg);
+	if (command == MDPW_REPLY) {
+		SPDLOG_DEBUG("Sending {} to broker", mdps_commands[static_cast<int>(*command.data())]);
+		zmqutil::dump(msg);
+	}
 	return worker_->send(msg);
 }
 

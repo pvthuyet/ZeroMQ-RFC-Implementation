@@ -159,11 +159,19 @@ void mdbroker::worker_process(std::string const& sender, zmqpp::message_t& msg)
 		wrk.update_expiry();
 	}
 	else if (cmd == MDPW_REPLY) {
+		//Frame 0: Empty frame
+		//Frame 1 : “MDPW01”(six bytes, representing MDP / Worker v0.1)
+		//Frame 2 : 0x03 (one byte, representing REPLY)
+		//Frame 3 : Client address(envelope stack)
+		//Frame 4 : Empty(zero bytes, envelope delimiter)
+		//Frames 5 + : Reply body(opaque binary)
+
 		//  Remove & save client return envelope and insert the
 		//  protocol header and service name, then rewrap envelope.
 		// Frame 3: client address
 		auto cliaddr = msg.get<std::string>(0);
-		msg.pop_front();
+		msg.pop_front(); // Frame 3
+		msg.pop_front(); // Frame 4
 
 		// Build message send to client ------------------------------
 		//Frame 0: Empty(zero bytes, invisible to REQ application)
@@ -173,6 +181,8 @@ void mdbroker::worker_process(std::string const& sender, zmqpp::message_t& msg)
 		msg.push_front(wrk.service_name_);
 		msg.push_front(MDPC_CLIENT);
 		msg.push_front("");
+		msg.push_front(cliaddr);
+		zmqutil::dump(msg);
 		socket_->send(msg); // send reply to client
 		worker_waiting(wrk);
 	}
