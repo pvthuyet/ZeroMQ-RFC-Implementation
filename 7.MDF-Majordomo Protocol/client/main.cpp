@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
 			std::string msg;
 			std::cin >> msg;
 			if (boost::iequals(msg, "q"s)) break;
-			client.send("echo", msg);
+			client.send(service_name, msg);
 			auto reply = client.recv();
 			std::cout << reply << std::endl;
 		}
