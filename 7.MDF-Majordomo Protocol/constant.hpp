@@ -15,3 +15,10 @@ const std::string BACKEND_HOST		= "backend_host";
 const std::string FRONTEND_ENDPOINT = "frontend_endpoint";
 const std::string BACKEND_ENDPOINT	= "backend_endpoint";
 const std::string SERVICES			= "services";
+
+// MMI - Majordomo Management Interface
+const std::string MMI_SERVICE			= "mmi.service";
+const std::string MMI_FOUND				= "200";
+const std::string MMI_NOT_FOUND			= "404";
+const std::string MMI_NOT_IMPLEMENTED	= "501";
+const std::string MMI_KEY				= "mmi.";

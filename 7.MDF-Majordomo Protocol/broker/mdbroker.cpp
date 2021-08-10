@@ -149,7 +149,8 @@ void mdbroker::worker_process(std::string const& sender, zmqpp::message_t& msg)
 	// Valid the command for this worker
 	bool isnotvalid = (cmd == MDPW_HEARTBEAT && !isready) ||
 		(cmd == MDPW_REPLY && !isready) ||
-		(cmd == MDPW_READY && isready);
+		(cmd == MDPW_READY && isready) ||
+		(cmd == MDPW_READY && !isready && (0 == sender.find_first_of(MMI_KEY)));
 	if (isnotvalid) {
 		worker_delete(wrk.identity_, true);
 		return;
@@ -319,6 +320,37 @@ void mdbroker::service_dispatch(mdbroker::service& srv, std::optional<zmqpp::mes
 	}
 }
 
+void mdbroker::service_internal(std::string_view service_name,
+	std::optional<zmqpp::message_t>&& msg)
+{
+	// client id
+	auto clientid = msg->get<std::string>(0);
+	msg->pop_front();
+	// Empty(zero bytes, envelope delimiter)
+	msg->pop_front();
+	if (service_name == MMI_SERVICE) {
+		auto body = msg->get<std::string>(0);
+		msg->pop_front();
+		if (services_.count(body)) {
+			msg->push_front(MMI_FOUND);
+		}
+		else {
+			msg->push_front(MMI_NOT_FOUND);
+		}
+	}
+	else {
+		msg->push_front(MMI_NOT_IMPLEMENTED);
+	}
+
+	//  Remove & save client return envelope and insert the
+	//  protocol header and service name, then rewrap envelope.
+	msg->push_front(service_name.data());
+	msg->push_front(MDPC_CLIENT);
+	msg->push_front("");
+	msg->push_front(clientid);
+	socket_->send(*msg);
+}
+
 void mdbroker::client_process(std::string const& sender, zmqpp::message_t& msg)
 {
 	// ** Message format from Client
@@ -347,7 +379,12 @@ void mdbroker::client_process(std::string const& sender, zmqpp::message_t& msg)
 	msg.push_front(sender);
 
 	// TODO "mmi."
-	service_dispatch(srv, std::make_optional<zmqpp::message_t>(std::move(msg)));
+	if (0 == service_name.find_first_of(MMI_KEY)) {
+		service_internal(service_name, std::make_optional<zmqpp::message_t>(std::move(msg)));
+	}
+	else {
+		service_dispatch(srv, std::make_optional<zmqpp::message_t>(std::move(msg)));
+	}
 }
 
 SAIGON_NAMESPACE_END

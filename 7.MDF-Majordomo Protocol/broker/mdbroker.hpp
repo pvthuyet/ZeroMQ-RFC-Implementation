@@ -68,6 +68,9 @@ private:
 	void service_dispatch(mdbroker::service& service, 
 		std::optional<zmqpp::message_t>&& msg);
 
+	void service_internal(std::string_view service_name,
+		std::optional<zmqpp::message_t>&& msg);
+
 	// Client
 	void client_process(std::string const& sender, zmqpp::message_t& msg);
 };
