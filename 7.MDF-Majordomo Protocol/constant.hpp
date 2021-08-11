@@ -22,3 +22,8 @@ const std::string MMI_FOUND				= "200";
 const std::string MMI_NOT_FOUND			= "404";
 const std::string MMI_NOT_IMPLEMENTED	= "501";
 const std::string MMI_KEY				= "mmi.";
+
+// TSP - Titanic Service Protocol
+const std::string TITANIC_DIR		= ".titanic";
+const std::string QUEUE_FILE		= "queue";
+const std::string QUEUE_LINEFORMAT	= "-{0}\n";

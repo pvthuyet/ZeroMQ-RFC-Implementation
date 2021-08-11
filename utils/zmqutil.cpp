@@ -2,6 +2,7 @@
 #include "logger/logger_define.hpp"
 #include <string>
 #include <sstream>
+#include <fstream>
 
 SAIGON_NAMESPACE_BEGIN
 namespace zmqutil
@@ -32,5 +33,23 @@ namespace zmqutil
         }
         SPDLOG_DEBUG(oss.str());
 	}
+
+    void save(std::string_view path, const zmqpp::message_t& msg)
+    {
+        std::ofstream ofs(path.data(), std::ios::out);
+        for (int i = 0; i < msg.parts(); ++i) {
+            ofs << msg.get<std::string>(i);
+        }
+    }
+
+    zmqpp::message_t load(std::string_view path)
+    {
+        zmqpp::message_t msg;
+        std::ifstream ifs(path.data(), std::ios::in);
+        for (std::string line; std::getline(ifs, line);) {
+            msg << line;
+        }
+        return msg;
+    }
 }
 SAIGON_NAMESPACE_END
