@@ -1,3 +1,4 @@
+#include <vld.h>
 #include "mdcliapi.hpp"
 #include "utils/config_parser.hpp"
 #include "constant.hpp"
@@ -27,19 +28,25 @@ int main(int argc, char* argv[])
 		// Discovery service
 		client.send(MMI_SERVICE, service_name);
 		auto response = client.recv();
-		if (response != MMI_FOUND) {
-			SPDLOG_INFO("Service '{}' is not available {}", service_name, response);
+		if (response.parts() == 0) {
+			SPDLOG_ERROR("Request {} doesn't work", MMI_SERVICE);
 			return EXIT_FAILURE;
 		}
+		else {
+			auto resmsg = response.get<std::string>(0);
+			if (resmsg != MMI_FOUND) {
+				SPDLOG_INFO("Service '{}' is not available {}", service_name, resmsg);
+				return EXIT_FAILURE;
+			}
+		}
 
-		while (true) {
-			std::cout << "Enter message: ";
-			std::string msg;
-			std::cin >> msg;
-			if (boost::iequals(msg, "q"s)) break;
-			client.send(service_name, msg);
+		for (int i = 1; i < 10; ++i) {
+			auto sendmsg = std::format("hello {}", i);
+			client.send(service_name, sendmsg);
 			auto reply = client.recv();
-			std::cout << reply << std::endl;
+			auto repmsg = reply.get<std::string>(0);
+			std::cout << sendmsg << " => " << repmsg << std::endl;
+			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 		}
 	}
 	catch (const std::exception& ex) {

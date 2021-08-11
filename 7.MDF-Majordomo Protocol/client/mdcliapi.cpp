@@ -44,7 +44,19 @@ void mdcliapi::send(std::string_view service, std::string_view msg)
 	socket_->send(req);
 }
 
-std::string mdcliapi::recv()
+void mdcliapi::send(std::string_view service, zmqpp::message_t& msg)
+{
+	//Frame 0: Empty(zero bytes, invisible to REQ application)
+	//Frame 1 : “MDPC01”(six bytes, representing MDP / Client v0.1)
+	//Frame 2 : Service name(printable string)
+	//Frames 3 + : Request body(opaque binary)
+	msg.push_front(service.data());
+	msg.push_front(MDPC_CLIENT);
+	msg.push_front("");
+	socket_->send(msg);
+}
+
+zmqpp::message_t mdcliapi::recv()
 {
 	//Frame 0: Empty(zero bytes, invisible to REQ application)
 	//Frame 1 : “MDPC01”(six bytes, representing MDP / Client v0.1)
@@ -53,17 +65,17 @@ std::string mdcliapi::recv()
 
 	zmqpp::poller_t poller;
 	poller.add(*socket_);
-	auto isok = poller.poll(timeout_);
+	poller.poll(timeout_);
+
+	zmqpp::message_t msg;
 	if (poller.events(*socket_) == zmqpp::poller_t::poll_in) {
-		zmqpp::message_t msg;
 		socket_->receive(msg);
 		Ensures(msg.parts() >= 4);
 		msg.pop_front(); // Frame 0
 		msg.pop_front(); // Frame 1
 		msg.pop_front(); // Frame 2
-		return msg.get< std::string>(0);
 	}
-	return {};
+	return msg;
 }
 
 SAIGON_NAMESPACE_END

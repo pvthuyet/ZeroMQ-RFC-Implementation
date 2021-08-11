@@ -16,3 +16,14 @@ add_executable(titanic
  "titanic/request_worker.cpp")
 target_include_directories(titanic PRIVATE ${SGLIB_INCLUDEDIR} ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_SOURCE_DIR}/7.MDF-Majordomo Protocol" "${CMAKE_SOURCE_DIR}/7.MDF-Majordomo Protocol/worker")
 target_link_libraries(titanic PRIVATE ${WINDOWS_LIBRARIES} ${SGLIB_LIBRARIES})
+
+add_executable(ticlient
+	"${CMAKE_SOURCE_DIR}/logger/logger.cpp"
+	"${CMAKE_SOURCE_DIR}/utils/zmqutil.cpp"
+	"${CMAKE_SOURCE_DIR}/utils/config_parser.cpp"
+	"client/main.cpp"
+	"${CMAKE_SOURCE_DIR}/7.MDF-Majordomo Protocol/client/mdcliapi.cpp" )
+target_include_directories(ticlient PRIVATE ${SGLIB_INCLUDEDIR} ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_SOURCE_DIR}/7.MDF-Majordomo Protocol" "${CMAKE_SOURCE_DIR}/7.MDF-Majordomo Protocol/client")
+target_link_libraries(ticlient PRIVATE ${WINDOWS_LIBRARIES} ${SGLIB_LIBRARIES})
+
+configure_file("${CMAKE_SOURCE_DIR}/7.MDF-Majordomo Protocol/config.json" "${CMAKE_CURRENT_BINARY_DIR}/config.json" COPYONLY)

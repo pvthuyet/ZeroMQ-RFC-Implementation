@@ -21,7 +21,9 @@ public:
 		std::string_view id = "");
 
 	void send(std::string_view service, std::string_view msg);
-	std::string recv();
+	void send(std::string_view service, zmqpp::message_t& msg);
+
+	zmqpp::message_t recv();
 
 private:
 	void connect_to_broker();
