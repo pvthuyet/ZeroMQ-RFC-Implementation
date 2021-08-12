@@ -21,8 +21,10 @@ add_executable(ticlient
 	"${CMAKE_SOURCE_DIR}/logger/logger.cpp"
 	"${CMAKE_SOURCE_DIR}/utils/zmqutil.cpp"
 	"${CMAKE_SOURCE_DIR}/utils/config_parser.cpp"
+	"${CMAKE_SOURCE_DIR}/7.MDF-Majordomo Protocol/client/mdcliapi.cpp" 
 	"client/main.cpp"
-	"${CMAKE_SOURCE_DIR}/7.MDF-Majordomo Protocol/client/mdcliapi.cpp" )
+	"client/ticlient.cpp"
+	)
 target_include_directories(ticlient PRIVATE ${SGLIB_INCLUDEDIR} ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_SOURCE_DIR}/7.MDF-Majordomo Protocol" "${CMAKE_SOURCE_DIR}/7.MDF-Majordomo Protocol/client")
 target_link_libraries(ticlient PRIVATE ${WINDOWS_LIBRARIES} ${SGLIB_LIBRARIES})
 

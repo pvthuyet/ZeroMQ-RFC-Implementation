@@ -24,6 +24,9 @@ const std::string MMI_NOT_IMPLEMENTED	= "501";
 const std::string MMI_KEY				= "mmi.";
 
 // TSP - Titanic Service Protocol
+const std::string TITANIC_REQUEST	= "titanic.request";
+const std::string TITANIC_REPLY		= "titanic.reply";
+const std::string TITANIC_CLOSE		= "titanic.close";
 const std::string TITANIC_DIR		= ".titanic";
 const std::string QUEUE_FILE		= "queue";
 const std::string QUEUE_LINEFORMAT	= "-{0}\n";
