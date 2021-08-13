@@ -1,6 +1,7 @@
 #include "titanic.hpp"
 #include "request_worker.hpp"
 #include "reply_worker.hpp"
+#include "close_worker.hpp"
 #include "mdcliapi.hpp"
 #include "utils/zmqutil.hpp"
 #include <filesystem>
@@ -24,11 +25,18 @@ void titanic::start()
 		return this->request(pipe);
 		});
 
+	// Reply worker
 	reply_worker reply(ctx_, brokerep_, adminep_);
 	reply.start();
+
+	// Close worker
+	close_worker close(ctx_, brokerep_, adminep_);
+	close.start();
+
 	run(request.pipe());
 
 	reply.wait();
+	close.wait();
 }
 
 void titanic::wait()
@@ -87,6 +95,7 @@ void titanic::run(zmqpp::socket_t* pipe)
 				pos += UUID_LENGTH + 2;
 				fs.seekg(pos);
 			}
+			// TODO remove queuefile
 		}
 	}
 }

@@ -26,19 +26,24 @@ std::string ticlient::send(std::string_view srvname, zmqpp::message_t& req)
 
 zmqpp::message_t ticlient::recv(std::string_view uuid)
 {
+	using namespace std::literals;
 	SPDLOG_INFO("Asking result for {}", uuid);
+	std::this_thread::sleep_for(10ms);
 	// Wait until we get a reply
 	while (1) {
 		zmqpp::message_t msg(uuid.data());
 		auto res = service_call(TITANIC_REPLY, msg);
 		if (!res.parts()) {
 			SPDLOG_INFO("No reply yet, trying again...");
-			std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 		}
 		else {
 			// close request
-			//zmqpp::message_t clmsg(uuid.data());
-			//auto clres = service_call(TITANIC_CLOSE, clmsg);
+			zmqpp::message_t clmsg(uuid.data());
+			auto clres = service_call(TITANIC_CLOSE, clmsg);
+			if (clres.parts()) {
+				SPDLOG_INFO("{} success!", TITANIC_CLOSE);
+			}
 			return res;
 		}
 	}

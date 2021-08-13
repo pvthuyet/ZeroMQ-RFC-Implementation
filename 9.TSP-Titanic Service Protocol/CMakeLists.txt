@@ -16,6 +16,7 @@ add_executable(titanic
 	"titanic/main.cpp"
  "titanic/request_worker.cpp"
  "titanic/reply_worker.cpp"
+ "titanic/close_worker.cpp"
  )
 target_include_directories(titanic PRIVATE 
 ${SGLIB_INCLUDEDIR} 
