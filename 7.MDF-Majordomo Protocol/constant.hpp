@@ -31,4 +31,3 @@ const std::string TITANIC_REPLY		= "titanic.reply";
 const std::string TITANIC_CLOSE		= "titanic.close";
 const std::string TITANIC_DIR		= ".titanic";
 const std::string QUEUE_FILE		= "queue";
-const std::string QUEUE_LINEFORMAT	= "-{}\n";

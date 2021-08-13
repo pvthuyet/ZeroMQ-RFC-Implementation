@@ -64,7 +64,6 @@ void titanic::run(zmqpp::socket_t* pipe)
 		}
 
 		if (fs::exists(queuefile)) {
-			auto ab = fs::absolute(queuefile);
 			std::fstream fs(queuefile, std::ios::in | std::ios::out);
 			fs.seekg(0, std::ios::end);
 			auto size = fs.tellg();

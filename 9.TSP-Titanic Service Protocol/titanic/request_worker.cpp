@@ -17,11 +17,6 @@ request_worker::request_worker(
 	pipe_{pipe}
 {}
 
-std::string request_filename(std::string_view uuid)
-{
-	return std::format("{}/{}.req", TITANIC_DIR, uuid);
-}
-
 void request_worker::run(std::stop_token tok)
 {
 	//Frame 0: Service name(printable string)
@@ -39,7 +34,7 @@ void request_worker::run(std::stop_token tok)
 				auto uuid = sg::random_factor{}.ramdom_uuid<std::string>();
 
 				// save to disk
-				zmqutil::save(request_filename(uuid), *req);
+				zmqutil::save(std::format("{}/{}.req", TITANIC_DIR, uuid), *req);
 
 				// Send UUID through to message queue
 				pipe_->send(uuid);
