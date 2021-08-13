@@ -7,6 +7,8 @@ constexpr int HEARTBEAT_LIVENESS	= 3;       //  3-5 is reasonable
 constexpr int HEARTBEAT_INTERVAL	= 2500;
 constexpr int HEARTBEAT_EXPIRY		= HEARTBEAT_INTERVAL * HEARTBEAT_LIVENESS;
 
+constexpr int UUID_LENGTH			= 37;
+
 // For config file
 const std::string ADMIN_HOST		= "admin_host";
 const std::string ADMIN_ENDPOINT	= "admin_endpoint";
@@ -29,4 +31,4 @@ const std::string TITANIC_REPLY		= "titanic.reply";
 const std::string TITANIC_CLOSE		= "titanic.close";
 const std::string TITANIC_DIR		= ".titanic";
 const std::string QUEUE_FILE		= "queue";
-const std::string QUEUE_LINEFORMAT	= "-{0}\n";
+const std::string QUEUE_LINEFORMAT	= "-{}\n";

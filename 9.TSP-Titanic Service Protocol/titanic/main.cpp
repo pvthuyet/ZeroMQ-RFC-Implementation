@@ -2,7 +2,9 @@
 #include "utils/config_parser.hpp"
 #include "logger/logger.hpp"
 #include "logger/logger_define.hpp"
+#include "sgutils/random_factor.hpp"
 
+#include <fstream>
 int main(int argc, char* argv[])
 {
 	using namespace std::string_literals;

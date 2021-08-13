@@ -23,5 +23,7 @@ public:
 
 private:
 	bool request(zmqpp::socket_t* sock);
+	void run(zmqpp::socket_t* pipe);
+	int service_success(std::string_view uuid);
 };
 SAIGON_NAMESPACE_END

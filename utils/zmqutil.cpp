@@ -38,7 +38,7 @@ namespace zmqutil
     {
         std::ofstream ofs(path.data(), std::ios::out);
         for (int i = 0; i < msg.parts(); ++i) {
-            ofs << msg.get<std::string>(i);
+            ofs << msg.get<std::string>(i) << std::endl;
         }
     }
 
