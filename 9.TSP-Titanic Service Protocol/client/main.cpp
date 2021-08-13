@@ -1,9 +1,10 @@
-#include <vld.h>
+//#include <vld.h>
 #include "ticlient.hpp"
 #include "utils/config_parser.hpp"
 #include "constant.hpp"
 #include "logger/logger.hpp"
 #include "logger/logger_define.hpp"
+#include "utils/zmqutil.hpp"
 #include <boost/algorithm/string.hpp>
 
 int main(int argc, char* argv[])
@@ -27,7 +28,7 @@ int main(int argc, char* argv[])
 		zmqpp::message_t msg("hello world");
 		auto uuid = client.send(srvname, msg);
 		auto reply = client.recv(uuid);
-		SPDLOG_INFO("Reply: {}", reply.get<std::string>(reply.parts() - 1));
+		zmqutil::dump(reply);
 	}
 	catch (const std::exception& ex) {
 		SPDLOG_ERROR(ex.what());

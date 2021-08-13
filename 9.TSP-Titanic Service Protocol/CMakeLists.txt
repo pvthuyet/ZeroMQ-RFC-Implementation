@@ -14,7 +14,9 @@ add_executable(titanic
 	"${CMAKE_SOURCE_DIR}/7.MDF-Majordomo Protocol/client/mdcliapi.cpp" 
 	"titanic/titanic.cpp"
 	"titanic/main.cpp"
- "titanic/request_worker.cpp")
+ "titanic/request_worker.cpp"
+ "titanic/reply_worker.cpp"
+ )
 target_include_directories(titanic PRIVATE 
 ${SGLIB_INCLUDEDIR} 
 ${CMAKE_SOURCE_DIR} 

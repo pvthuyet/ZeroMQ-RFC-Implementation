@@ -1,5 +1,6 @@
 #include "titanic.hpp"
 #include "request_worker.hpp"
+#include "reply_worker.hpp"
 #include "mdcliapi.hpp"
 #include "utils/zmqutil.hpp"
 #include <filesystem>
@@ -23,7 +24,11 @@ void titanic::start()
 		return this->request(pipe);
 		});
 
+	reply_worker reply(ctx_, brokerep_, adminep_);
+	reply.start();
 	run(request.pipe());
+
+	reply.wait();
 }
 
 void titanic::wait()
