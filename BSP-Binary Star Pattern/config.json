@@ -1,0 +1,41 @@
+{
+  "admin_host": "tcp://*:5555",
+  "admin_endpoint": "tcp://localhost:5555",
+
+  "frontend_host": "tcp://*:5556",
+  "frontend_endpoint": "tcp://localhost:5556",
+
+  "state_publish_host": "tcp://*:5557",
+  "state_publish_host_endpoint": "tcp://localhost:5557",
+
+  "state_subscribe_host": "tcp://*:5558",
+  "state_subscribe_host_endpoint": "tcp://localhost:5558",
+
+  "backup_frontend_host": "tcp://*:5559",
+  "backup_frontend_endpoint": "tcp://localhost:5559",
+
+  "backup_state_publish_host": "tcp://*:6000",
+  "backup_state_publish_host_endpoint": "tcp://localhost:6000",
+
+  "backup_state_subscribe_host": "tcp://*:6001",
+  "backup_state_subscribe_host_endpoint": "tcp://localhost:6001",
+
+  "services": [
+    {
+      "name": "echo",
+      "quantity": 1
+    },
+    {
+      "name": "coffee",
+      "quantity": 2
+    },
+    {
+      "name": "tea",
+      "quantity": 3
+    },
+    {
+      "name": "water",
+      "quantity": 1
+    }
+  ]
+}
