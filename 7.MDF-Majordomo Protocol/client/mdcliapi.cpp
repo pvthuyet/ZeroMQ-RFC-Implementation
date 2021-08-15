@@ -14,10 +14,9 @@ mdcliapi::mdcliapi(zmqpp::context_t& ctx,
 	broker_{broker},
 	id_{id}
 {
-	connect_to_broker();
 }
 
-void mdcliapi::connect_to_broker()
+void mdcliapi::connect_to_broker(std::string_view addr)
 {
 	socket_ = std::make_unique<zmqpp::socket_t>(ctx_, zmqpp::socket_type::dealer);
 	socket_->set(zmqpp::socket_option::linger, 0);
@@ -26,8 +25,13 @@ void mdcliapi::connect_to_broker()
 		strid = std::format("{}",random_factor{}.random_number(1, 999));
 	}
 	socket_->set(zmqpp::socket_option::identity, strid);
-	socket_->connect(broker_);
-	SPDLOG_INFO("Client {} connected to {}", strid, broker_);
+	socket_->connect(addr.data());
+	SPDLOG_INFO("Client {} connected to {}", strid, addr);
+}
+
+std::string mdcliapi::get_server_endpoint() const
+{
+	return broker_;
 }
 
 void mdcliapi::send(std::string_view service, std::string_view msg)

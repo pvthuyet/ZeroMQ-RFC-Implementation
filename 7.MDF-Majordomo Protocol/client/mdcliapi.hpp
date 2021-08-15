@@ -20,12 +20,14 @@ public:
 		std::string_view broker,
 		std::string_view id = "");
 
+	std::string get_server_endpoint() const;
+
 	void send(std::string_view service, std::string_view msg);
 	void send(std::string_view service, zmqpp::message_t& msg);
 
 	zmqpp::message_t recv();
 
-private:
-	void connect_to_broker();
+public:
+	void connect_to_broker(std::string_view addr);
 };
 SAIGON_NAMESPACE_END

@@ -3,7 +3,7 @@
 #include "logger/logger.hpp"
 #include "logger/logger_define.hpp"
 #include "utils/config_parser.hpp"
-#include "constant.hpp"
+#include "bsp_constant.hpp"
 #include <boost/algorithm/string.hpp>
 
 int main(int argc, char* argv[])

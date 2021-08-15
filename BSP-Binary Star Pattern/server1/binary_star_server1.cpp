@@ -36,14 +36,12 @@ void binary_star_server1::start(bool isprimary)
 
 		if (isprimary) {
 			SPDLOG_INFO("Primary active, waiting for backup (passive)");
-			SPDLOG_INFO("Publish primary host: {}", statepub_host_);
-			SPDLOG_INFO("connect to backup endpoint: {}", statesub_ep_);
+			SPDLOG_INFO("Publish primary host: {}, backup endpoint: {}", statepub_host_, statesub_ep_);
 			fsm_.state_ = state_t::primary;
 		}
 		else {
 			SPDLOG_INFO("Backup passive, waiting for primary (active)");
-			SPDLOG_INFO("Publish backup host: {}", statepub_host_);
-			SPDLOG_INFO("connect to primary endpoint: {}", statesub_ep_);
+			SPDLOG_INFO("Publish backup host: {}, backup endpoint: {}", statepub_host_, statesub_ep_);
 			fsm_.state_ = state_t::backup;
 		}
 

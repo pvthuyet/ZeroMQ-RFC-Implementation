@@ -1,7 +1,7 @@
 #pragma once
 
 #include "define.hpp"
-#include "constant.hpp"
+#include "bsp_constant.hpp"
 #include <zmqpp/zmqpp.hpp>
 #include <string>
 
