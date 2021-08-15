@@ -6,7 +6,21 @@ Implement ZeroMQ RFC by modern C++
 * Architecture  
   
 ![](images/ppp.png)  
+### 7. MDP - Majordomo Protocol
+* RFC - [https://rfc.zeromq.org/spec/7/](https://rfc.zeromq.org/spec/7/)
+* [Document detail](https://zguide.zeromq.org/docs/chapter4/#Service-Oriented-Reliable-Queuing-Majordomo-Pattern)  
   
+![](images/mdp.png)    
+### 8. MMI - Majordomo Management Interface
+* RFC - [https://rfc.zeromq.org/spec/8/](https://rfc.zeromq.org/spec/8/)
+* [Document detail](https://zguide.zeromq.org/docs/chapter4/#Service-Discovery)  
+  
+### 9. TSP - Titanic Service Protocol
+* RFC - [https://rfc.zeromq.org/spec/9/](https://rfc.zeromq.org/spec/9/)
+* [Document detail](https://zguide.zeromq.org/docs/chapter4/#Service-Discovery)  
+* Architecture  
+  
+![](images/tsp.png)  
 ## Third parties
 * [zeromq library](https://github.com/zeromq/libzmq)
 * [C++ binding for zeromq](https://github.com/zeromq/zmqpp)
