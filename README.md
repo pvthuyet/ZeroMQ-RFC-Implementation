@@ -21,6 +21,12 @@ Implement ZeroMQ RFC by modern C++
 * Architecture  
   
 ![](images/tsp.png)  
+### BSP - Binary Star Pattern
+* RFC - TBD
+* [Document detail](https://zguide.zeromq.org/docs/chapter4/#High-Availability-Pair-Binary-Star-Pattern)  
+* Architecture  
+![](images/bsp.png)  
+
 ## Third parties
 * [zeromq library](https://github.com/zeromq/libzmq)
 * [C++ binding for zeromq](https://github.com/zeromq/zmqpp)
