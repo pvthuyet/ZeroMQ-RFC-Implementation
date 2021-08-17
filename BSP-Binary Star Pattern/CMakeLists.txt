@@ -30,4 +30,15 @@ add_executable(bstarsrv1
 target_include_directories(bstarsrv1 PRIVATE ${SGLIB_INCLUDEDIR} ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(bstarsrv1 PRIVATE ${WINDOWS_LIBRARIES} ${SGLIB_LIBRARIES})
 
+## server
+add_executable(bstarsrv2
+	"${CMAKE_SOURCE_DIR}/logger/logger.hpp"
+	"${CMAKE_SOURCE_DIR}/logger/logger.cpp"
+	"${CMAKE_SOURCE_DIR}/utils/config_parser.cpp"
+	"server2/main.cpp"
+	"server2/bstar.cpp"
+)
+target_include_directories(bstarsrv2 PRIVATE ${SGLIB_INCLUDEDIR} ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(bstarsrv2 PRIVATE ${WINDOWS_LIBRARIES} ${SGLIB_LIBRARIES})
+
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/config.json" "${CMAKE_CURRENT_BINARY_DIR}/config.json" COPYONLY)
