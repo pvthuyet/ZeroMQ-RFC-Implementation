@@ -3,5 +3,11 @@
   "admin_endpoint": "tcp://localhost:5555",
 
   "server_host": "tcp://*:5556",
-  "server_endpoint": "tcp://2405:4800:529f:342a:f91b:5f60:f5c5:8c1f:5556"
+  "server_endpoint": "tcp://localhost:5556",
+
+  "server_host2": "tcp://*:5557",
+  "server_endpoint2": "tcp://localhost:5557",
+
+  "server_host3": "tcp://*:5558",
+  "server_endpoint3": "tcp://localhost:5558"
 }

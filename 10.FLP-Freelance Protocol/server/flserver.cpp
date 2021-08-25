@@ -1,6 +1,7 @@
 #include "flserver.hpp"
 #include "logger/logger_define.hpp"
 #include "utils/zmqutil.hpp"
+#include "flp_constant.hpp"
 #include <memory>
 
 SAIGON_NAMESPACE_BEGIN
@@ -23,7 +24,10 @@ void flserver::start()
 		while (true) {
 			zmqpp::message_t msg;
 			socket->receive(msg);
+
+			SPDLOG_INFO("Received message");
 			zmqutil::dump(msg);
+
 			if (msg.parts() == 0) break;
 
 			//  Frame 0: identity of client
@@ -35,15 +39,18 @@ void flserver::start()
 			msg.pop_front();
 
 			zmqpp::message_t reply;
-			if (control == "PING") {
-				reply.push_back("PONG");
+			if (control == COMMAND_PING) {
+				reply.push_back(COMMAND_PONG);
 			}
 			else {
-				reply.push_back(control);
-				reply.push_back("OK");
+				reply.copy(msg);
+				reply.push_front(control);
 			}
 			reply.push_front(identity);
+
+			SPDLOG_INFO("Reply message");
 			zmqutil::dump(reply);
+
 			socket->send(reply);
 		}
 	}
