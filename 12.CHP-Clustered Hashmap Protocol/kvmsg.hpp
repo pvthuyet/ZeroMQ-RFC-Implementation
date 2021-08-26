@@ -13,9 +13,6 @@ class kvmsg
 {
     using properties = std::unordered_map<std::string, std::string>;
 
-    //  Keys are short strings
-    inline static constexpr int KVMSG_KEY_MAX = 255;
-
     //  Message is formatted on wire as 4 frames:
     //  frame 0: getKey (0MQ string)
     //  frame 1: getSequence (8 bytes, network order)
@@ -55,10 +52,17 @@ public:
     size_t size() const;
 
     std::string get_UUID() const;
-    void set_UUID();
+    void set_UUID(std::string_view uuid);
 
     std::string get_prop(std::string const& name) const;
-    void set_prop(std::string const& name, std::string const& val);
+    void add_prop(std::string const& name, std::string const& val);
+    void set_prop(std::string const& prop);
+
+    static kvmsg recv(zmqpp::socket_t& sock);
+    void send(zmqpp::socket_t& sock);
+
+    kvmsg dup() const;
+    void dump() const;
 
 private:
     void encode_props();

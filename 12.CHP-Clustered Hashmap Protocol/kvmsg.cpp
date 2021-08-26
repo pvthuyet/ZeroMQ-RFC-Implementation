@@ -78,10 +78,12 @@ std::string kvmsg::get_UUID() const
 	return {};
 }
 
-void kvmsg::set_UUID()
+void kvmsg::set_UUID(std::string_view uuid)
 {
 	m_present[FRAME_UUID] = true;
-	m_frame[FRAME_UUID] = sg::random_factor{}.ramdom_uuid<std::string>();
+	m_frame[FRAME_UUID] = uuid.empty() ?
+		sg::random_factor{}.ramdom_uuid<std::string>() :
+		uuid;
 }
 
 std::string kvmsg::get_prop(std::string const& name) const
@@ -89,9 +91,64 @@ std::string kvmsg::get_prop(std::string const& name) const
 	return m_props.at(name);
 }
 
-void kvmsg::set_prop(std::string const& name, std::string const& val)
+void kvmsg::add_prop(std::string const& name, std::string const& val)
 {
 	m_props[name] = val;
+}
+
+void kvmsg::set_prop(std::string const& prop)
+{
+	m_frame[FRAME_PROPS] = prop;
+	m_present[FRAME_PROPS] = true;
+}
+
+kvmsg kvmsg::recv(zmqpp::socket_t& sock)
+{
+	kvmsg ret(0);
+	zmqpp::message_t msg;
+	sock.receive(msg);
+	Expects(msg.parts() == KVMSG_FRAMES);
+
+	ret.set_key(msg.get<std::string>(FRAME_KEY));
+	ret.set_sequence(std::stoull(msg.get<std::string>(FRAME_SEQ)));
+	ret.set_UUID(msg.get<std::string>(FRAME_UUID));
+	ret.set_prop(msg.get<std::string>(FRAME_PROPS));
+	ret.set_body(msg.get<std::string>(FRAME_BODY));
+	ret.decode_props();
+
+	return ret;
+}
+
+void kvmsg::send(zmqpp::socket_t& sock)
+{
+	zmqpp::message_t msg;
+	encode_props();
+	for (auto& f : m_frame) {
+		msg.push_back(f);
+	}
+	sock.send(msg);
+}
+
+kvmsg kvmsg::dup() const
+{
+	kvmsg copy(*this);
+	return copy;
+}
+
+void kvmsg::dump() const
+{
+	std::stringstream ss;
+	ss << std::format("[seq:{}]\n", get_sequence());
+	ss << std::format("[size:{}]\n", size());
+	ss << "[";
+	for (auto& [k, v] : m_props) {
+		ss << std::format("{}={};", k, v);
+	}
+	ss << "]\n";
+
+	ss << get_body();
+	ss << '\n';
+	std::cout << ss.str();
 }
 
 void kvmsg::encode_props()
