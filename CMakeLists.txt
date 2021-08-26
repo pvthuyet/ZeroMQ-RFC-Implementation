@@ -49,6 +49,40 @@ message(STATUS "Boost_MINOR_VERSION: ${Boost_MINOR_VERSION}")
 message(STATUS "Boost_SUBMINOR_VERSION: ${Boost_SUBMINOR_VERSION}")
 message(STATUS "Boost_LIB_DIAGNOSTIC_DEFINITIONS: ${Boost_LIB_DIAGNOSTIC_DEFINITIONS}")
 
+# Google test
+include(FetchContent)
+FetchContent_Declare(
+	googletest
+	GIT_REPOSITORY https://github.com/google/googletest.git
+	GIT_TAG release-1.11.0
+)
+FetchContent_GetProperties(googletest)
+if(NOT googletest_POPULATED)
+	FetchContent_Populate(googletest)
+	# Prevent GoogleTest from overriding our compiler/linker options
+	# when building with Visual Studio
+	set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+	# Prevent GoogleTest from using PThreads
+	set(gtest_disable_pthreads ON CACHE BOOL "" FORCE)
+
+	# adds the targers: gtest, gtest_main, gmock, gmock_main
+	add_subdirectory(
+		${googletest_SOURCE_DIR}
+		${googletest_BINARY_DIR}
+    )
+
+	# Silence std::tr1 warning on MSVC
+	if(MSVC)
+		foreach(_tgt gtest gtest_main gmock gmock_main)
+			target_compile_definitions(${_tgt}
+				PRIVATE
+					"_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING"
+				)
+		endforeach()
+	endif()
+endif()
+
+
 ## set include
 set(LIBZMQ_INCLUDEDIR "${SGLIB_ROOT}/${LIBZMQ_NAME}/include")
 set(CPPZMQ_INCLUDEDIR "${SGLIB_ROOT}/${CPPZMQ_NAME}/include")
@@ -93,3 +127,4 @@ add_subdirectory("7.MDF-Majordomo Protocol")
 add_subdirectory("9.TSP-Titanic Service Protocol")
 add_subdirectory("BSP-Binary Star Pattern")
 add_subdirectory("10.FLP-Freelance Protocol")
+add_subdirectory("12.CHP-Clustered Hashmap Protocol")
