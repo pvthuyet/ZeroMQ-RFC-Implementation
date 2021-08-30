@@ -59,7 +59,7 @@ public:
     void set_prop(std::string const& prop);
 
     static kvmsg recv(zmqpp::socket_t& sock);
-    void send(zmqpp::socket_t& sock);
+    void send(zmqpp::socket_t& sock, std::string_view identity = "");
 
     kvmsg dup() const;
     void dump() const;

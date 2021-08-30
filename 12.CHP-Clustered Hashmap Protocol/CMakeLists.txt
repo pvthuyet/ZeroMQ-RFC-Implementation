@@ -8,6 +8,9 @@ add_executable(chserver
 	"${CMAKE_SOURCE_DIR}/logger/logger.cpp"
 	"${CMAKE_SOURCE_DIR}/utils/config_parser.cpp"
 	"${CMAKE_SOURCE_DIR}/utils/zmqutil.cpp"
+	"${CMAKE_SOURCE_DIR}/BSP-Binary Star Pattern/server2/bstar.cpp"
+	"kvmsg.cpp"
+	"server/clonesrv.cpp"
 	"server/main.cpp"
  "kvmsg.cpp")
 target_include_directories(chserver PRIVATE 

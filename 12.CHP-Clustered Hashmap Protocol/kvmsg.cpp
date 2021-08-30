@@ -119,12 +119,15 @@ kvmsg kvmsg::recv(zmqpp::socket_t& sock)
 	return ret;
 }
 
-void kvmsg::send(zmqpp::socket_t& sock)
+void kvmsg::send(zmqpp::socket_t& sock, std::string_view identity)
 {
 	zmqpp::message_t msg;
 	encode_props();
 	for (auto& f : m_frame) {
 		msg.push_back(f);
+	}
+	if (!identity.empty()) {
+		msg.push_front(identity.data());
 	}
 	sock.send(msg);
 }
